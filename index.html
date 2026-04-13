@@ -361,6 +361,30 @@
     .cta-section { text-align: center; padding: 80px 0 120px; }
     .cta-section h2 { font-size: clamp(28px,3.5vw,42px); font-weight: 800; margin-bottom: 16px; }
     .cta-section p { font-size: 16px; color: var(--fg-muted); max-width: 500px; margin: 0 auto 32px; }
+
+    /* ── Request Form ─────────────── */
+    .request-form-wrap {
+      max-width: 480px; margin: 0 auto; text-align: left;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+      padding: 36px;
+    }
+    .rf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .rf-group { margin-bottom: 16px; }
+    .rf-group label { display: block; font-size: 12px; font-weight: 600; color: var(--fg-muted); margin-bottom: 6px; }
+    .rf-input {
+      width: 100%; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--fg); font-size: 14px; font-family: inherit;
+      transition: border-color 0.2s; outline: none;
+    }
+    .rf-input:focus { border-color: var(--accent); }
+    .rf-input::placeholder { color: var(--fg-faint); }
+    select.rf-input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23555' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
+    textarea.rf-input { resize: vertical; min-height: 70px; }
+    .rf-submit { width: 100%; margin-top: 4px; }
+    .rf-status { font-size: 13px; margin-top: 14px; text-align: center; }
+    .rf-status.success { color: var(--accent); }
+    .rf-status.error { color: #e53e3e; }
+    @media (max-width: 520px) { .rf-row { grid-template-columns: 1fr; } }
     footer { border-top: 1px solid var(--border); padding: 40px 0; }
     footer .container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
     .footer-brand { display: flex; align-items: center; gap: 8px; }
@@ -702,10 +726,42 @@
 
 <section id="contact" class="cta-section">
   <div class="container">
-    <p class="section-label">Kontakt</p>
+    <p class="section-label">Lizenz anfragen</p>
     <h2>Bereit durchzustarten?</h2>
-    <p>Schreib uns eine E-Mail und wir melden uns bei dir — persönlich, ohne Chatbot, ohne Warteschleife.</p>
-    <a href="mailto:office@jasonschreiber.at" class="btn-primary">&#9993;&ensp;E-Mail schreiben</a>
+    <p>Fülle das Formular aus und wir schalten deine Lizenz persönlich frei.</p>
+    <div class="request-form-wrap">
+      <form id="requestForm" onsubmit="return submitRequest(event)">
+        <div class="rf-row">
+          <div class="rf-group">
+            <label for="rfFirstName">Vorname *</label>
+            <input type="text" id="rfFirstName" class="rf-input" placeholder="Max" required />
+          </div>
+          <div class="rf-group">
+            <label for="rfLastName">Nachname *</label>
+            <input type="text" id="rfLastName" class="rf-input" placeholder="Mustermann" required />
+          </div>
+        </div>
+        <div class="rf-group">
+          <label for="rfEmail">E-Mail-Adresse *</label>
+          <input type="email" id="rfEmail" class="rf-input" placeholder="max@example.com" required />
+        </div>
+        <div class="rf-group">
+          <label for="rfPlan">Gewünschter Plan</label>
+          <select id="rfPlan" class="rf-input">
+            <option value="starter">Starter — 1 Gerät</option>
+            <option value="professional" selected>Professional — bis zu 5 Geräte</option>
+            <option value="enterprise">Enterprise — unbegrenzte Geräte</option>
+          </select>
+        </div>
+        <div class="rf-group">
+          <label for="rfMessage">Nachricht (optional)</label>
+          <textarea id="rfMessage" class="rf-input" rows="3" placeholder="Erzähl uns kurz, wofür du Axion nutzen möchtest..."></textarea>
+        </div>
+        <button type="submit" class="btn-primary rf-submit" id="rfSubmitBtn">Lizenz anfragen</button>
+        <p class="rf-status" id="rfStatus"></p>
+      </form>
+    </div>
+    <p style="margin-top:24px;font-size:13px;color:var(--fg-faint);">Oder schreib uns direkt: <a href="mailto:office@jasonschreiber.at">office@jasonschreiber.at</a></p>
   </div>
 </section>
 
@@ -727,6 +783,44 @@ document.querySelectorAll('.feature-tab').forEach(tab => {
     document.getElementById(tab.dataset.target).classList.add('active');
   });
 });
+</script>
+
+<!-- Request form logic -->
+<script>
+async function submitRequest(e) {
+  e.preventDefault();
+  const btn = document.getElementById('rfSubmitBtn');
+  const status = document.getElementById('rfStatus');
+  btn.disabled = true; btn.textContent = 'Wird gesendet...';
+  status.textContent = ''; status.className = 'rf-status';
+
+  try {
+    const res = await fetch('https://axion-license.axion-crm.workers.dev/api/request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        firstName: document.getElementById('rfFirstName').value.trim(),
+        lastName: document.getElementById('rfLastName').value.trim(),
+        email: document.getElementById('rfEmail').value.trim(),
+        plan: document.getElementById('rfPlan').value,
+        message: document.getElementById('rfMessage').value.trim() || undefined,
+      }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      status.textContent = 'Anfrage gesendet! Wir melden uns in Kürze bei dir.';
+      status.className = 'rf-status success';
+      document.getElementById('requestForm').reset();
+    } else {
+      status.textContent = data.error || 'Fehler beim Senden. Bitte versuche es erneut.';
+      status.className = 'rf-status error';
+    }
+  } catch {
+    status.textContent = 'Netzwerkfehler. Bitte versuche es erneut.';
+    status.className = 'rf-status error';
+  }
+  btn.disabled = false; btn.textContent = 'Lizenz anfragen';
+}
 </script>
 
 <!-- Network canvas -->

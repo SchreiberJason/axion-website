@@ -187,6 +187,13 @@
     .badge-status.active .dot { background: var(--accent); }
     .badge-status.inactive .dot { background: var(--danger); }
     .badge-status.expired .dot { background: var(--warning); }
+    .badge-status.pending { background: rgba(214,158,46,0.1); color: var(--warning); }
+    .badge-status.pending .dot { background: var(--warning); }
+    .badge-status.approved { background: rgba(var(--accent-rgb),0.1); color: var(--accent); }
+    .badge-status.approved .dot { background: var(--accent); }
+    .badge-status.rejected { background: rgba(229,62,62,0.1); color: var(--danger); }
+    .badge-status.rejected .dot { background: var(--danger); }
+    .td-message { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--fg-faint); }
 
     .empty-state { text-align: center; padding: 60px 20px; color: var(--fg-faint); }
     .empty-state p { font-size: 14px; }
@@ -299,6 +306,29 @@
     <div class="stat-card"><div class="stat-label">Bald ablaufend</div><div class="stat-value" id="statExpiring">—</div><div class="stat-sub">nächste 30 Tage</div></div>
   </div>
 
+  <!-- Requests Section -->
+  <div class="toolbar" style="margin-top:8px;">
+    <h2>Anfragen <span id="pendingBadge" style="display:inline-flex;align-items:center;justify-content:center;background:var(--danger);color:#fff;font-size:11px;font-weight:700;min-width:22px;height:22px;border-radius:11px;padding:0 7px;margin-left:8px;vertical-align:middle;"></span></h2>
+  </div>
+  <div class="table-wrap" style="margin-bottom:40px;" id="requestsWrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>E-Mail</th>
+          <th>Plan</th>
+          <th>Nachricht</th>
+          <th>Status</th>
+          <th>Eingegangen</th>
+          <th>Aktionen</th>
+        </tr>
+      </thead>
+      <tbody id="requestsTableBody">
+        <tr><td colspan="7" class="empty-state"><p>Lade Anfragen...</p></td></tr>
+      </tbody>
+    </table>
+  </div>
+
   <!-- Toolbar -->
   <div class="toolbar">
     <h2>Lizenzen</h2>
@@ -408,6 +438,7 @@
 const API_BASE = 'https://axion-license.axion-crm.workers.dev';
 let adminSecret = '';
 let licenses = [];
+let requests = [];
 
 // ── Auth ──────────────────────────────────────────────────────────────────
 
@@ -421,6 +452,7 @@ function login() {
       document.getElementById('loginView').style.display = 'none';
       document.getElementById('dashboardView').classList.add('visible');
       document.getElementById('navRight').style.display = 'flex';
+      fetchRequests();
     } else {
       adminSecret = '';
       showLoginError('Ungültiger Admin-Schlüssel.');
@@ -728,6 +760,94 @@ function toast(msg, type = 'success') {
   ) + `<span>${msg}</span>`;
   container.appendChild(el);
   setTimeout(() => { el.style.transition = 'opacity 0.3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+// ── Requests ──────────────────────────────────────────────────────────────
+
+async function fetchRequests() {
+  try {
+    const data = await apiFetch('/api/admin/requests');
+    if (!data.ok) return;
+    requests = data.requests || [];
+    renderRequests();
+  } catch {}
+}
+
+function renderRequests() {
+  const tbody = document.getElementById('requestsTableBody');
+  const pending = requests.filter(r => r.status === 'pending');
+  const badge = document.getElementById('pendingBadge');
+  badge.textContent = pending.length;
+  badge.style.display = pending.length > 0 ? 'inline-flex' : 'none';
+
+  if (requests.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><p>Keine Anfragen vorhanden.</p></td></tr>';
+    return;
+  }
+
+  const statusLabels = { pending: 'Offen', approved: 'Freigegeben', rejected: 'Abgelehnt' };
+
+  tbody.innerHTML = requests.map(r => {
+    const s = r.status || 'pending';
+    return `<tr>
+      <td class="td-name">${esc(r.first_name)} ${esc(r.last_name)}</td>
+      <td>${esc(r.email)}</td>
+      <td><span class="badge-plan ${r.plan || 'starter'}">${(r.plan || 'starter').charAt(0).toUpperCase() + (r.plan || 'starter').slice(1)}</span></td>
+      <td class="td-message" title="${esc(r.message || '')}">${esc(r.message || '—')}</td>
+      <td><span class="badge-status ${s}"><span class="dot"></span>${statusLabels[s] || s}</span></td>
+      <td>${formatDate(r.created_at)}</td>
+      <td>
+        <div class="td-actions">
+          ${s === 'pending' ? `
+            <button class="btn btn-sm btn-accent" onclick="approveRequest('${r.id}')">Freigeben</button>
+            <button class="btn btn-sm btn-danger" onclick="rejectRequest('${r.id}')">Ablehnen</button>
+          ` : ''}
+          ${s === 'approved' && r.license_key ? `<button class="btn btn-sm btn-ghost" onclick="copyKey('${esc(r.license_key)}')">Key kopieren</button>` : ''}
+          <button class="btn btn-sm btn-ghost" onclick="deleteRequest('${r.id}')" title="Löschen" style="padding:7px 8px;">&#10005;</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function approveRequest(id) {
+  const req = requests.find(r => r.id === id);
+  if (!req) return;
+
+  const res = await apiFetch('/api/admin/requests/' + id + '/approve', {
+    method: 'POST',
+    body: JSON.stringify({ plan: req.plan }),
+  });
+
+  if (res.ok) {
+    toast('Lizenz erstellt und freigegeben: ' + res.licenseKey, 'success');
+    await Promise.all([fetchLicenses(), fetchRequests()]);
+  } else {
+    toast(res.error || 'Fehler beim Freigeben.', 'error');
+  }
+}
+
+async function rejectRequest(id) {
+  const res = await apiFetch('/api/admin/requests/' + id, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: 'rejected' }),
+  });
+  if (res.ok) {
+    toast('Anfrage abgelehnt.', 'success');
+    await fetchRequests();
+  } else {
+    toast(res.error || 'Fehler.', 'error');
+  }
+}
+
+async function deleteRequest(id) {
+  const res = await apiFetch('/api/admin/requests/' + id, { method: 'DELETE' });
+  if (res.ok) {
+    toast('Anfrage gelöscht.', 'success');
+    await fetchRequests();
+  } else {
+    toast(res.error || 'Fehler.', 'error');
+  }
 }
 
 // ── Close modals on backdrop click / Escape ──────────────────────────────
