@@ -148,9 +148,9 @@
     /* ── Table ─────────────────────── */
     .table-wrap {
       background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-      overflow: hidden;
+      overflow-x: auto;
     }
-    table { width: 100%; border-collapse: collapse; }
+    table { width: 100%; border-collapse: collapse; min-width: 900px; }
     thead { background: var(--surface2); }
     th {
       text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 700;
@@ -165,7 +165,7 @@
     tr:hover td { background: rgba(var(--accent-rgb),0.02); }
     .td-name { color: var(--fg); font-weight: 600; }
     .td-key { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: var(--fg-muted); letter-spacing: 0.02em; }
-    .td-actions { display: flex; gap: 6px; }
+    .td-actions { display: flex; gap: 6px; flex-wrap: nowrap; white-space: nowrap; }
 
     /* ── Badges ────────────────────── */
     .badge-plan {
@@ -239,8 +239,6 @@
     }
     @media (max-width: 768px) {
       .stats-row { grid-template-columns: 1fr; }
-      .table-wrap { overflow-x: auto; }
-      table { min-width: 700px; }
       .form-row { grid-template-columns: 1fr; }
       .toolbar { flex-direction: column; align-items: stretch; }
       .toolbar-actions { flex-wrap: wrap; }
@@ -593,8 +591,8 @@ function renderTable() {
       <td>
         <div class="td-actions">
           <button class="btn btn-sm btn-ghost" onclick="openEditModal('${l.id}')">Bearbeiten</button>
-          <button class="btn btn-sm btn-ghost" onclick="toggleActive('${l.id}', ${l.active ? 'false' : 'true'})">${l.active ? 'Sperren' : 'Aktivieren'}</button>
-          <button class="btn btn-sm btn-danger" onclick="openDeleteModal('${l.id}', '${esc(l.customer_name)}')">Löschen</button>
+          <button class="btn btn-sm btn-ghost" onclick="toggleActive('${l.id}', ${l.active ? false : true})">${l.active ? 'Sperren' : 'Aktivieren'}</button>
+          <button class="btn btn-sm btn-danger" onclick="openDeleteModal('${l.id}')">Löschen</button>
         </div>
       </td>
     </tr>`;
@@ -698,10 +696,10 @@ async function submitLicense() {
 async function toggleActive(id, active) {
   const res = await apiFetch('/api/admin/licenses/' + id, {
     method: 'PATCH',
-    body: JSON.stringify({ active: active === 'true' || active === true }),
+    body: JSON.stringify({ active: !!active }),
   });
   if (res.ok) {
-    toast(active === 'true' || active === true ? 'Lizenz aktiviert.' : 'Lizenz gesperrt.', 'success');
+    toast(active ? 'Lizenz aktiviert.' : 'Lizenz gesperrt.', 'success');
     await fetchLicenses();
   } else {
     toast(res.error || 'Fehler', 'error');
@@ -710,9 +708,10 @@ async function toggleActive(id, active) {
 
 // ── Delete ────────────────────────────────────────────────────────────────
 
-function openDeleteModal(id, name) {
+function openDeleteModal(id) {
+  const lic = licenses.find(l => l.id === id);
   document.getElementById('deleteId').value = id;
-  document.getElementById('deleteInfo').textContent = 'Lizenz von: ' + name;
+  document.getElementById('deleteInfo').textContent = lic ? 'Lizenz von: ' + lic.customer_name : '';
   document.getElementById('deleteModal').classList.add('visible');
 }
 
