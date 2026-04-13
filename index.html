@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Axion CRM — Das lokale CRM für Versicherungsberater</title>
+  <meta name="description" content="Axion CRM ist die moderne, lokale Desktop-Software für Versicherungsberater. Kundenverwaltung, E-Mail, Kalender, KI-Assistent — alles in einer App. Deine Daten gehören dir." />
+  <link rel="icon" href="assets/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0a; --bg-rgb: 10,10,10;
+      --surface: #131416; --surface2: #1a1b20;
+      --border: #1f2130;
+      --fg: #ffffff; --fg-rgb: 255,255,255;
+      --fg-muted: #a0a0a0; --fg-faint: #555;
+      --brand: #028856; --brand-rgb: 2,136,86;
+      --accent: #38d9a3; --accent-rgb: 56,217,163;
+      --hover: #015e38;
+      --card-shadow: 0 12px 40px rgba(0,0,0,0.3);
+      --nav-bg: rgba(10,10,10,0.82);
+      --net-r: 56; --net-g: 217; --net-b: 163;
+      --net-node-alpha: 0.5; --net-line-alpha: 0.18;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f5f5f5; --bg-rgb: 245,245,245;
+        --surface: #ffffff; --surface2: #f0f0f0;
+        --border: #ddd;
+        --fg: #111111; --fg-rgb: 17,17,17;
+        --fg-muted: #555555; --fg-faint: #999;
+        --brand: #028856; --brand-rgb: 2,136,86;
+        --accent: #02784c; --accent-rgb: 2,120,76;
+        --hover: #016940;
+        --card-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        --nav-bg: rgba(245,245,245,0.85);
+        --net-r: 2; --net-g: 100; --net-b: 60;
+        --net-node-alpha: 0.7; --net-line-alpha: 0.3;
+      }
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg); color: var(--fg);
+      line-height: 1.6; -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── Nav ───────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: var(--nav-bg);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .container { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .nav-brand { display: flex; align-items: center; gap: 10px; }
+    .nav-brand img { width: 32px; height: 32px; border-radius: 8px; }
+    .nav-brand span { font-weight: 700; font-size: 18px; }
+    .nav-links { display: flex; gap: 32px; }
+    .nav-links a { color: var(--fg-muted); font-size: 14px; font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--fg); text-decoration: none; }
+    .nav-cta {
+      background: var(--brand); color: #fff; border: none;
+      padding: 8px 20px; border-radius: 10px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background 0.2s; display: inline-block;
+    }
+    .nav-cta:hover { background: var(--hover); text-decoration: none; }
+
+    /* ── Hero ──────────────────────── */
+    .hero {
+      position: relative; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    #hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+    .hero-content { position: relative; z-index: 2; text-align: center; padding: 80px 24px 60px; }
+    .hero-logo-wrap { width: 110px; height: 110px; margin: 0 auto 40px; position: relative; }
+    .hero-logo-glow {
+      position: absolute; inset: -40px;
+      background: radial-gradient(circle, rgba(var(--accent-rgb),0.25) 0%, transparent 70%);
+      border-radius: 50%; animation: logo-breathe 4s ease-in-out infinite;
+    }
+    @media (prefers-color-scheme: light) {
+      .hero-logo-glow {
+        background: radial-gradient(circle, rgba(var(--accent-rgb),0.35) 0%, transparent 70%);
+      }
+    }
+    @keyframes logo-breathe { 0%,100%{opacity:0.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.2)} }
+    .hero-logo {
+      width: 110px; height: 110px; border-radius: 26px;
+      position: relative; z-index: 1;
+      box-shadow: 0 0 80px rgba(var(--accent-rgb),0.2), 0 4px 32px rgba(0,0,0,0.4);
+    }
+    .hero h1 { font-size: clamp(42px,6vw,76px); font-weight: 800; line-height: 1.05; margin-bottom: 24px; letter-spacing: -0.03em; }
+    .hero h1 .gradient {
+      background: linear-gradient(135deg,#38d9a3 0%,#0dcf8a 50%,#38d9a3 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; animation: shimmer 4s ease-in-out infinite;
+    }
+    @media (prefers-color-scheme: light) {
+      .hero h1 .gradient {
+        background: linear-gradient(135deg,#028856 0%,#03a06b 50%,#028856 100%);
+        background-size: 200% auto;
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text; animation: shimmer 4s ease-in-out infinite;
+      }
+    }
+    @keyframes shimmer { 0%{background-position:0% center} 50%{background-position:100% center} 100%{background-position:0% center} }
+    .hero-sub { font-size: clamp(16px,2vw,20px); color: var(--fg-muted); max-width: 580px; margin: 0 auto 44px; line-height: 1.7; }
+    .hero-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--brand); color: #fff; border: none;
+      padding: 15px 36px; border-radius: 14px; font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: all 0.25s;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary:hover { background: var(--hover); text-decoration: none; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(var(--brand-rgb),0.3); }
+    .btn-secondary {
+      background: rgba(var(--fg-rgb),0.06); color: var(--fg);
+      border: 1px solid rgba(var(--fg-rgb),0.12);
+      padding: 15px 36px; border-radius: 14px; font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: all 0.25s;
+      display: inline-flex; align-items: center; gap: 8px;
+      backdrop-filter: blur(10px);
+    }
+    .btn-secondary:hover { background: rgba(var(--fg-rgb),0.1); border-color: rgba(var(--fg-rgb),0.2); text-decoration: none; transform: translateY(-2px); }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(var(--accent-rgb),0.08); border: 1px solid rgba(var(--accent-rgb),0.18);
+      padding: 6px 16px; border-radius: 100px;
+      font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 28px;
+    }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── Section ───────────────────── */
+    section { padding: 100px 0; }
+    .section-label { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    .section-title { font-size: clamp(28px,3.5vw,42px); font-weight: 800; line-height: 1.15; margin-bottom: 16px; letter-spacing: -0.02em; }
+    .section-desc { font-size: 16px; color: var(--fg-muted); max-width: 560px; line-height: 1.7; }
+    .section-header { text-align: center; margin-bottom: 64px; }
+    .section-header .section-desc { margin: 0 auto; }
+
+    /* ── Highlight ─────────────────── */
+    .highlight {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 60px; text-align: center; margin: 0 0 40px;
+    }
+    .highlight h2 { font-size: 28px; font-weight: 800; margin-bottom: 12px; }
+    .highlight p { font-size: 16px; color: var(--fg-muted); max-width: 500px; margin: 0 auto; }
+    .highlight-icon {
+      width: 56px; height: 56px; border-radius: 16px;
+      background: rgba(var(--accent-rgb),0.08);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px; font-size: 24px;
+    }
+    @media (prefers-color-scheme: light) {
+      .highlight-icon { background: rgba(var(--accent-rgb),0.12); }
+      .highlight { box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
+    }
+
+    /* ── Features — Showcase Layout ──── */
+    #features { padding: 120px 0 80px; }
+    .features-container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* Tab navigation */
+    .feature-tabs {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      justify-content: center;
+      margin-bottom: 48px;
+    }
+    .feature-tab {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 20px;
+      font-size: 13px; font-weight: 600; color: var(--fg-muted);
+      cursor: pointer; transition: all 0.3s;
+      display: flex; align-items: center; gap: 8px;
+      white-space: nowrap;
+    }
+    .feature-tab:hover { border-color: rgba(var(--accent-rgb),0.3); color: var(--fg); transform: translateY(-2px); }
+    .feature-tab.active {
+      background: rgba(var(--accent-rgb),0.08);
+      border-color: var(--accent); color: var(--accent);
+      box-shadow: 0 0 20px rgba(var(--accent-rgb),0.1);
+    }
+    .feature-tab .tab-icon { font-size: 18px; }
+
+    /* Feature showcase panel */
+    .feature-showcase {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+      animation: fadeSlide 0.4s ease;
+    }
+    .feature-showcase.active { display: block; }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .showcase-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 420px;
+    }
+    .showcase-text {
+      padding: 56px 48px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .showcase-text .showcase-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+    }
+    .showcase-text h3 {
+      font-size: 32px; font-weight: 800; margin-bottom: 16px;
+      letter-spacing: -0.02em; line-height: 1.2;
+    }
+    .showcase-text .showcase-desc {
+      font-size: 16px; color: var(--fg-muted); line-height: 1.8; margin-bottom: 28px;
+    }
+    .showcase-bullets { list-style: none; }
+    .showcase-bullets li {
+      font-size: 14px; color: var(--fg-muted); padding: 8px 0;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .showcase-bullets li::before {
+      content: ''; width: 20px; height: 20px; min-width: 20px; border-radius: 50%;
+      background: rgba(var(--accent-rgb),0.1) url("data:image/svg+xml,%3Csvg width='10' height='8' viewBox='0 0 10 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4L3.5 6.5L9 1' stroke='%2338d9a3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center;
+    }
+    @media (prefers-color-scheme: light) {
+      .showcase-bullets li::before {
+        background: rgba(var(--accent-rgb),0.12) url("data:image/svg+xml,%3Csvg width='10' height='8' viewBox='0 0 10 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4L3.5 6.5L9 1' stroke='%23028856' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center;
+      }
+    }
+    .showcase-visual {
+      background: rgba(var(--accent-rgb),0.03);
+      display: flex; align-items: center; justify-content: center;
+      padding: 48px;
+      border-left: 1px solid var(--border);
+      position: relative; overflow: hidden;
+    }
+    .showcase-visual::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 60% 40%, rgba(var(--accent-rgb),0.08), transparent 70%);
+    }
+    @media (prefers-color-scheme: light) {
+      .showcase-visual {
+        background: rgba(var(--accent-rgb),0.04);
+      }
+      .showcase-visual::before {
+        background: radial-gradient(circle at 60% 40%, rgba(var(--accent-rgb),0.12), transparent 70%);
+      }
+    }
+    /* If a screenshot exists, show it as cover image */
+    .showcase-visual.has-screen {
+      padding: 24px;
+    }
+    .showcase-screen {
+      width: 100%; height: 100%; object-fit: cover;
+      border-radius: 12px; position: relative; z-index: 1;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    }
+    @media (prefers-color-scheme: light) {
+      .showcase-screen { box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
+    }
+    .showcase-big-icon {
+      font-size: 120px; position: relative; z-index: 1;
+      filter: drop-shadow(0 0 40px rgba(var(--accent-rgb),0.15));
+      animation: float 6s ease-in-out infinite;
+    }
+    @media (prefers-color-scheme: light) {
+      .showcase-big-icon {
+        filter: drop-shadow(0 0 50px rgba(var(--accent-rgb),0.3));
+      }
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(0) rotate(0deg); }
+      33% { transform: translateY(-10px) rotate(2deg); }
+      66% { transform: translateY(5px) rotate(-1deg); }
+    }
+    .showcase-stat {
+      position: absolute; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 20px;
+      font-size: 12px; font-weight: 600; color: var(--fg-muted);
+      box-shadow: var(--card-shadow);
+      z-index: 2;
+      animation: floatStat 5s ease-in-out infinite;
+    }
+    @media (prefers-color-scheme: light) {
+      .showcase-stat {
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1), 0 0 0 1px rgba(var(--accent-rgb),0.08);
+      }
+    }
+    .showcase-stat strong { display: block; font-size: 22px; color: var(--accent); font-weight: 800; }
+    @keyframes floatStat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    .stat-1 { bottom: 40px; left: 30px; animation-delay: 0s; }
+    .stat-2 { top: 40px; right: 30px; animation-delay: 1.5s; }
+
+    /* ── Pricing ───────────────────── */
+    .pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; align-items: stretch; }
+    .pricing-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 36px; position: relative;
+      transition: all 0.3s; display: flex; flex-direction: column;
+    }
+    .pricing-card:hover { transform: translateY(-4px); box-shadow: var(--card-shadow); }
+    .pricing-card.featured { border-color: var(--brand); box-shadow: 0 0 50px rgba(var(--brand-rgb),0.1); }
+    .pricing-card.featured:hover { box-shadow: 0 0 50px rgba(var(--brand-rgb),0.18), var(--card-shadow); }
+    .pricing-badge {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg,var(--brand),#0aa86a); color: #fff;
+      padding: 4px 18px; border-radius: 100px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+    }
+    .pricing-card h3 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .pricing-subtitle { font-size: 13px; color: var(--fg-faint); margin-bottom: 24px; }
+    .pricing-price { font-size: 14px; color: var(--fg-muted); margin-bottom: 28px; padding-bottom: 28px; border-bottom: 1px solid var(--border); }
+    .pricing-price em { font-style: normal; font-size: 12px; color: var(--fg-faint); }
+    .pricing-features { list-style: none; margin-bottom: 28px; flex: 1; }
+    .pricing-features li { font-size: 14px; color: var(--fg-muted); padding: 7px 0; display: flex; align-items: center; gap: 10px; }
+    .pricing-features li::before {
+      content: ''; width: 18px; height: 18px; min-width: 18px; border-radius: 50%;
+      background: rgba(var(--accent-rgb),0.08) url("data:image/svg+xml,%3Csvg width='10' height='8' viewBox='0 0 10 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4L3.5 6.5L9 1' stroke='%2338d9a3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center;
+    }
+    @media (prefers-color-scheme: light) {
+      .pricing-features li::before {
+        background: rgba(var(--accent-rgb),0.1) url("data:image/svg+xml,%3Csvg width='10' height='8' viewBox='0 0 10 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4L3.5 6.5L9 1' stroke='%23028856' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center;
+      }
+    }
+    .pricing-cta { width: 100%; padding: 13px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.25s; margin-top: auto; }
+    .pricing-cta.primary { background: var(--brand); color: #fff; }
+    .pricing-cta.primary:hover { background: var(--hover); transform: translateY(-1px); }
+    .pricing-cta.secondary { background: var(--surface2); color: var(--fg); border: 1px solid var(--border); }
+    .pricing-cta.secondary:hover { border-color: var(--fg-faint); transform: translateY(-1px); }
+
+    /* ── Download ──────────────────── */
+    .download-section { text-align: center; padding: 80px 0 40px; }
+    .download-cards { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 40px; }
+    .download-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px 36px; text-align: center; transition: all 0.3s; min-width: 220px; }
+    .download-card:hover { border-color: rgba(var(--accent-rgb),0.3); transform: translateY(-3px); box-shadow: var(--card-shadow); }
+    .download-card .os-icon { font-size: 36px; margin-bottom: 12px; }
+    .download-card h4 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .download-card .os-arch { font-size: 12px; color: var(--fg-faint); margin-bottom: 16px; }
+    .download-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--brand); color: #fff; border: none; padding: 10px 24px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .download-btn:hover { background: var(--hover); text-decoration: none; transform: translateY(-1px); }
+    .download-hint { margin-top: 20px; font-size: 12px; color: var(--fg-faint); }
+    .download-hint a { color: var(--fg-muted); }
+
+    /* ── CTA / Footer ─────────────── */
+    .cta-section { text-align: center; padding: 80px 0 120px; }
+    .cta-section h2 { font-size: clamp(28px,3.5vw,42px); font-weight: 800; margin-bottom: 16px; }
+    .cta-section p { font-size: 16px; color: var(--fg-muted); max-width: 500px; margin: 0 auto 32px; }
+    footer { border-top: 1px solid var(--border); padding: 40px 0; }
+    footer .container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+    .footer-brand { display: flex; align-items: center; gap: 8px; }
+    .footer-brand img { width: 24px; height: 24px; border-radius: 6px; }
+    .footer-brand span { font-weight: 600; font-size: 14px; }
+    .footer-text { font-size: 13px; color: var(--fg-faint); }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { font-size: 13px; color: var(--fg-faint); }
+    .footer-links a:hover { color: var(--fg-muted); }
+
+    /* ── Mobile ────────────────────── */
+    @media (max-width: 960px) {
+      .pricing-grid { grid-template-columns: 1fr; max-width: 440px; margin-left: auto; margin-right: auto; }
+      .showcase-inner { grid-template-columns: 1fr; }
+      .showcase-visual { min-height: 280px; border-left: none; border-top: 1px solid var(--border); }
+      .showcase-text { padding: 36px 28px; }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .hero { min-height: auto; padding-top: 100px; }
+      .hero-content { padding: 40px 20px 60px; }
+      .highlight { padding: 40px 24px; }
+      section { padding: 60px 0; }
+      .feature-tabs { gap: 6px; }
+      .feature-tab { padding: 10px 14px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <div class="nav-brand"><img src="assets/logo.png" alt="Axion" /><span>Axion</span></div>
+    <div class="nav-links">
+      <a href="#features">Funktionen</a>
+      <a href="#pricing">Preise</a>
+      <a href="#download">Download</a>
+      <a href="#contact">Kontakt</a>
+    </div>
+    <a href="#contact" class="nav-cta">Jetzt anfragen</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-content">
+    <div class="badge"><span class="badge-dot"></span>Local-First Desktop App</div>
+    <div class="hero-logo-wrap">
+      <div class="hero-logo-glow"></div>
+      <img src="assets/logo.png" alt="Axion CRM" class="hero-logo" />
+    </div>
+    <h1>Dein CRM.<br /><span class="gradient">Deine Daten.</span></h1>
+    <p class="hero-sub">Axion ist das moderne CRM für Versicherungsberater. Kundenverwaltung, E-Mail, Kalender, Dokumente und KI-Assistent — alles lokal auf deinem Rechner.</p>
+    <div class="hero-buttons">
+      <a href="#download" class="btn-primary">&#8595;&ensp;Jetzt herunterladen</a>
+      <a href="#pricing" class="btn-secondary">Preise ansehen</a>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <div class="highlight">
+    <div class="highlight-icon">&#128274;</div>
+    <h2>Local-First Architektur</h2>
+    <p>Alle deine Kundendaten bleiben auf deinem Rechner — keine Cloud, kein Abo-Zwang, volle DSGVO-Konformität.</p>
+  </div>
+</div>
+
+<!-- ═══ Features — Showcase ═══ -->
+<section id="features">
+  <div class="features-container">
+    <div class="section-header">
+      <p class="section-label">Funktionen</p>
+      <h2 class="section-title">Alles, was du brauchst</h2>
+      <p class="section-desc">Eine App statt zehn Tools. Wähle eine Funktion und erfahre mehr.</p>
+    </div>
+
+    <div class="feature-tabs" id="featureTabs">
+      <button class="feature-tab active" data-target="ft-crm"><span class="tab-icon">&#128101;</span> Kunden</button>
+      <button class="feature-tab" data-target="ft-email"><span class="tab-icon">&#128231;</span> E-Mail</button>
+      <button class="feature-tab" data-target="ft-cal"><span class="tab-icon">&#128197;</span> Kalender</button>
+      <button class="feature-tab" data-target="ft-ai"><span class="tab-icon">&#129302;</span> KI-Assistent</button>
+      <button class="feature-tab" data-target="ft-docs"><span class="tab-icon">&#128196;</span> Dokumente</button>
+      <button class="feature-tab" data-target="ft-calc"><span class="tab-icon">&#128200;</span> Rechner</button>
+      <button class="feature-tab" data-target="ft-todos"><span class="tab-icon">&#9989;</span> Aufgaben</button>
+      <button class="feature-tab" data-target="ft-updates"><span class="tab-icon">&#128640;</span> Updates</button>
+      <button class="feature-tab" data-target="ft-themes"><span class="tab-icon">&#127912;</span> Themes</button>
+    </div>
+
+    <!-- CRM -->
+    <div class="feature-showcase active" id="ft-crm">
+      <div class="showcase-inner">
+        <div class="showcase-text">
+          <p class="showcase-label">Kundenverwaltung</p>
+          <h3>Deine Kunden, komplett im Blick</h3>
+          <p class="showcase-desc">Verwalte alle Kundendaten zentral: Kontaktinfos, Familienstand, Einkommen, Verträge und Produkte. Das Journey-Tracking zeigt dir den Status jedes Kunden — von der Erstberatung bis zum Abschluss.</p>
+          <ul class="showcase-bullets">
+            <li>Vollständige Kundenprofile mit allen relevanten Daten</li>
+            <li>Journey-Tracking von Erstberatung bis Abschluss</li>
+            <li>Intelligente Suche findet jeden Kunden sofort</li>
+            <li>Produkte, Verträge und Interaktionshistorie</li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <div class="showcase-big-icon">&#128101;</div>
+          <div class="showcase-stat stat-1"><strong>360°</strong>Kundenansicht</div>
+          <div class="showcase-stat stat-2"><strong>&#8734;</strong>Kontakte</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Email -->
+    <div class="feature-showcase" id="ft-email">
+      <div class="showcase-inner">
+        <div class="showcase-text">
+          <p class="showcase-label">E-Mail Client</p>
+          <h3>E-Mails, die sich selbst zuordnen</h3>
+          <p class="showcase-desc">Vollwertiger E-Mail-Client direkt in Axion. Verbinde beliebig viele IMAP-Konten und sieh eingehende Nachrichten automatisch dem richtigen Kunden zugeordnet.</p>
+          <ul class="showcase-bullets">
+            <li>Multi-Account IMAP/SMTP-Unterstützung</li>
+            <li>Rich-Text-Editor mit Signaturen</li>
+            <li>Automatische Kundenzuordnung</li>
+            <li>Verschlüsselte Zugangsdaten (AES-256)</li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <div class="showcase-big-icon">&#128231;</div>
+          <div class="showcase-stat stat-1"><strong>Auto</strong>Zuordnung</div>
+          <div class="showcase-stat stat-2"><strong>AES</strong>Verschlüsselt</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="feature-showcase" id="ft-cal">
+      <div class="showcase-inner">
+        <div class="showcase-text">
+          <p class="showcase-label">Kalender & CalDAV</p>
+          <h3>Deine Termine, überall synchron</h3>
+          <p class="showcase-desc">Synchronisiere deinen Kalender per CalDAV mit iCloud, Google oder jedem anderen Anbieter. Definiere Geschäftszeiten und lass dich per Desktop-Benachrichtigung erinnern.</p>
+          <ul class="showcase-bullets">
+            <li>CalDAV-Sync mit iCloud, Google & mehr</li>
+            <li>Wochen-, Tages- und Monatsansicht</li>
+            <li>Geschäftszeiten und Slot-Konfiguration</li>
+            <li>Desktop-Erinnerungen vor jedem Termin</li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <div class="showcase-big-icon">&#128197;</div>
+          <div class="showcase-stat stat-1"><strong>Sync</strong>CalDAV</div>
+          <div class="showcase-stat stat-2"><strong>&#128276;</strong>Erinnerungen</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI -->
+    <div class="feature-showcase" id="ft-ai">
+      <div class="showcase-inner">
+        <div class="showcase-text">
+          <p class="showcase-label">KI-Assistent</p>
+          <h3>Künstliche Intelligenz, die dich kennt</h3>
+          <p class="showcase-desc">Wähle deinen bevorzugten KI-Anbieter und lass dir bei Kundenanalysen, Beratungsnotizen und Produktempfehlungen helfen — mit konfigurierbarem Datenschutz-Level.</p>
+          <ul class="showcase-bullets">
+            <li>Claude, OpenAI, Gemini oder lokale Modelle</li>
+            <li>Kundenanalyse und Beratungsnotizen</li>
+            <li>3 Datenschutz-Stufen: Minimal, Finanzen, Vollständig</li>
+            <li>Automatische Produktempfehlungen</li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <div class="showcase-big-icon">&#129302;</div>
+          <div class="showcase-stat stat-1"><strong>3+</strong>KI-Anbieter</div>
+          <div class="showcase-stat stat-2"><strong>DSGVO</strong>Konform</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Docs -->
+    <div class="feature-showcase" id="ft-docs">
+      <div class="showcase-inner">
+        <div class="showcase-text">
+          <p class="showcase-label">Dokumente & PDF</p>
+          <h3>PDFs, die sich selbst ausfüllen</h3>
+          <p class="showcase-desc">Lade Dokumente hoch und ordne sie Kunden zu. PDF-Formulare werden automatisch mit Kundendaten befüllt — spart Stunden an Tipparbeit.</p>
+          <ul class="showcase-bullets">
+            <li>Automatisches PDF-Befüllen mit Kundendaten</li>
+            <li>OCR-Texterkennung für gescannte Dokumente</li>
+            <li>Kundenbezogene Dokumentenverwaltung</li>
+            <li>Export und Druck jederzeit möglich</li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <div class="showcase-big-icon">&#128196;</div>
+          <div class="showcase-stat stat-1"><strong>OCR</strong>Texterkennung</div>
+          <div class="showcase-stat stat-2"><strong>Auto</strong>Befüllung</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calc -->
+    <div class="feature-showcase" id="ft-calc">
+      <div class="showcase-inner">
+        <div class="showcase-text">
+          <p class="showcase-label">Rechner & Portale</p>
+          <h3>Alle Partner, eine Oberfläche</h3>
+          <p class="showcase-desc">Greife auf Rechner und Portale von Allianz, Merkur, UNIQA, Generali, Helvetia, Grawe und vielen weiteren direkt aus Axion zu.</p>
+          <ul class="showcase-bullets">
+            <li>Allianz, Merkur, UNIQA, Generali, Helvetia, Grawe & mehr</li>
+            <li>Ergebnisse automatisch dem Kunden zugeordnet</li>
+            <li>Gespeicherte Zugangsdaten pro Portal</li>
+            <li>Eingebettete Rechner ohne Browserwechsel</li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <div class="showcase-big-icon">&#128200;</div>
+          <div class="showcase-stat stat-1"><strong>15+</strong>Partner</div>
+          <div class="showcase-stat stat-2"><strong>1-Klick</strong>Zugang</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Todos -->
+    <div class="feature-showcase" id="ft-todos">
+      <div class="showcase-inner">
+        <div class="showcase-text">
+          <p class="showcase-label">Aufgaben & Todos</p>
+          <h3>Nichts fällt mehr durch</h3>
+          <p class="showcase-desc">Erstelle Aufgaben mit Fälligkeitsdaten, Kategorien und direktem Kundenbezug. Filtere nach Priorität, Status oder Kunde.</p>
+          <ul class="showcase-bullets">
+            <li>Aufgaben mit Fälligkeiten und Kategorien</li>
+            <li>Direkter Kundenbezug pro Aufgabe</li>
+            <li>Filter nach Priorität, Status oder Kunde</li>
+            <li>Follow-up-Erinnerungen für offene Angebote</li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <div class="showcase-big-icon">&#9989;</div>
+          <div class="showcase-stat stat-1"><strong>0</strong>Vergessen</div>
+          <div class="showcase-stat stat-2"><strong>&#128203;</strong>Kategorien</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Updates -->
+    <div class="feature-showcase" id="ft-updates">
+      <div class="showcase-inner">
+        <div class="showcase-text">
+          <p class="showcase-label">Automatische Updates</p>
+          <h3>Immer auf dem neuesten Stand</h3>
+          <p class="showcase-desc">Axion prüft automatisch auf neue Versionen und installiert Updates im Hintergrund. Du wählst, ob sofort oder beim nächsten Start.</p>
+          <ul class="showcase-bullets">
+            <li>Automatische Versionsprüfung beim Start</li>
+            <li>1-Klick-Update ohne erneuten Download</li>
+            <li>Changelogs zeigen, was sich geändert hat</li>
+            <li>Kein manueller Download nötig</li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <div class="showcase-big-icon">&#128640;</div>
+          <div class="showcase-stat stat-1"><strong>Auto</strong>Updates</div>
+          <div class="showcase-stat stat-2"><strong>1-Klick</strong>Aktualisieren</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Themes -->
+    <div class="feature-showcase" id="ft-themes">
+      <div class="showcase-inner">
+        <div class="showcase-text">
+          <p class="showcase-label">Dark Mode & Themes</p>
+          <h3>Dein Look, dein Workflow</h3>
+          <p class="showcase-desc">Passe Axion an deinen Stil an: wähle zwischen Dark Mode, Light Mode, System-Einstellung oder dem OVB-Corporate-Theme.</p>
+          <ul class="showcase-bullets">
+            <li>Dark Mode, Light Mode oder System-Erkennung</li>
+            <li>OVB-Corporate-Theme für Markentreue</li>
+            <li>Sidebar frei konfigurierbar — Position, Reihenfolge, Sichtbarkeit</li>
+            <li>Tab-System mit Split-View für Multitasking</li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <div class="showcase-big-icon">&#127912;</div>
+          <div class="showcase-stat stat-1"><strong>4</strong>Themes</div>
+          <div class="showcase-stat stat-2"><strong>&#9881;</strong>Konfigurierbar</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section id="pricing">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">Preise</p>
+      <h2 class="section-title">Einfache, faire Preise</h2>
+      <p class="section-desc">Alle Pläne beinhalten alle Funktionen — der Unterschied liegt in der Anzahl der Geräte.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <h3>Starter</h3>
+        <p class="pricing-subtitle">Für Einzelberater</p>
+        <p class="pricing-price">Preis auf Anfrage<br /><em>Jahreslizenz, jährlich verlängerbar</em></p>
+        <ul class="pricing-features"><li>Alle Funktionen inklusive</li><li>1 Gerät</li><li>1 Jahr Laufzeit</li><li>E-Mail-Support</li><li>Automatische Updates</li></ul>
+        <a href="#contact"><button class="pricing-cta secondary">Jetzt anfragen</button></a>
+      </div>
+      <div class="pricing-card featured">
+        <div class="pricing-badge">BELIEBT</div>
+        <h3>Professional</h3>
+        <p class="pricing-subtitle">Für Teams & Agenturen</p>
+        <p class="pricing-price">Preis auf Anfrage<br /><em>Jahreslizenz, jährlich verlängerbar</em></p>
+        <ul class="pricing-features"><li>Alle Funktionen inklusive</li><li>Bis zu 5 Geräte</li><li>1 Jahr Laufzeit</li><li>Prioritäts-Support</li><li>Automatische Updates</li><li>Onboarding-Unterstützung</li></ul>
+        <a href="#contact"><button class="pricing-cta primary">Jetzt anfragen</button></a>
+      </div>
+      <div class="pricing-card">
+        <h3>Enterprise</h3>
+        <p class="pricing-subtitle">Für große Organisationen</p>
+        <p class="pricing-price">Preis auf Anfrage<br /><em>Jahreslizenz, jährlich verlängerbar</em></p>
+        <ul class="pricing-features"><li>Alle Funktionen inklusive</li><li>Unbegrenzte Geräte</li><li>1 Jahr Laufzeit</li><li>Dedizierter Support</li><li>Automatische Updates</li><li>Onboarding-Unterstützung</li><li>Individuelle Anpassungen</li></ul>
+        <a href="#contact"><button class="pricing-cta secondary">Jetzt anfragen</button></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Download -->
+<section id="download" class="download-section">
+  <div class="container">
+    <p class="section-label">Download</p>
+    <h2 class="section-title">Jetzt herunterladen</h2>
+    <p class="section-desc" style="margin:0 auto;">Lade Axion CRM kostenlos herunter. Zur Nutzung wird ein Lizenzschlüssel benötigt.</p>
+    <div class="download-cards">
+      <div class="download-card"><div class="os-icon">&#63743;</div><h4>macOS</h4><p class="os-arch">Apple Silicon (M1/M2/M3/M4)</p><a href="https://github.com/SchreiberJason/axion-releases/releases/latest/download/Axion_0.1.0_aarch64.dmg" class="download-btn">&#8595;&ensp;.dmg herunterladen</a></div>
+      <div class="download-card"><div class="os-icon">&#63743;</div><h4>macOS</h4><p class="os-arch">Intel (x64)</p><a href="https://github.com/SchreiberJason/axion-releases/releases/latest/download/Axion_0.1.0_x64.dmg" class="download-btn">&#8595;&ensp;.dmg herunterladen</a></div>
+      <div class="download-card"><div class="os-icon">&#128187;</div><h4>Windows</h4><p class="os-arch">64-Bit (x64)</p><a href="https://github.com/SchreiberJason/axion-releases/releases/latest/download/Axion_0.1.0_x64-setup.exe" class="download-btn">&#8595;&ensp;.exe herunterladen</a></div>
+    </div>
+    <p class="download-hint">Benötigst du eine andere Version? <a href="https://github.com/SchreiberJason/axion-releases/releases">Alle Releases ansehen</a></p>
+  </div>
+</section>
+
+<section id="contact" class="cta-section">
+  <div class="container">
+    <p class="section-label">Kontakt</p>
+    <h2>Bereit durchzustarten?</h2>
+    <p>Schreib uns eine E-Mail und wir melden uns bei dir — persönlich, ohne Chatbot, ohne Warteschleife.</p>
+    <a href="mailto:office@jasonschreiber.at" class="btn-primary">&#9993;&ensp;E-Mail schreiben</a>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-brand"><img src="assets/logo.png" alt="Axion" /><span>Axion CRM</span></div>
+    <span class="footer-text">&copy; 2026 Jason Schreiber. Alle Rechte vorbehalten.</span>
+    <div class="footer-links"><a href="mailto:office@jasonschreiber.at">Kontakt</a><a href="admin.html">Admin</a></div>
+  </div>
+</footer>
+
+<!-- Feature tabs logic -->
+<script>
+document.querySelectorAll('.feature-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.feature-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.feature-showcase').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.target).classList.add('active');
+  });
+});
+</script>
+
+<!-- Network canvas -->
+<script>
+(function() {
+  const canvas = document.getElementById('hero-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, nodes = [], mouse = { x: -9999, y: -9999 }, dpr = 1;
+
+  const isLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+  const NR = isLight ? 2 : 56, NG = isLight ? 100 : 217, NB = isLight ? 60 : 163;
+  const NODE_ALPHA = isLight ? 0.65 : 0.5;
+  const LINE_ALPHA = isLight ? 0.25 : 0.18;
+  const NODE_COUNT = 120, CONNECT_DIST = 180, MOUSE_RADIUS = 280, MOUSE_REPEL = 0.02;
+
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    W = rect.width; H = rect.height;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function createNodes() {
+    nodes = [];
+    for (let i = 0; i < NODE_COUNT; i++) {
+      nodes.push({
+        x: Math.random() * W, y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5,
+        r: Math.random() * 2.2 + 1,
+        baseAlpha: Math.random() * 0.4 + 0.3,
+        ps: Math.random() * 0.02 + 0.005,
+        po: Math.random() * Math.PI * 2,
+      });
+    }
+  }
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
+      const dx = n.x - mouse.x, dy = n.y - mouse.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < MOUSE_RADIUS && dist > 0) {
+        const f = (MOUSE_RADIUS - dist) / MOUSE_RADIUS;
+        if (dist < MOUSE_RADIUS * 0.35) { n.vx += (dx/dist)*f*MOUSE_REPEL; n.vy += (dy/dist)*f*MOUSE_REPEL; }
+        else { n.vx -= (dx/dist)*f*MOUSE_REPEL*0.25; n.vy -= (dy/dist)*f*MOUSE_REPEL*0.25; }
+      }
+      n.x += n.vx; n.y += n.vy; n.vx *= 0.997; n.vy *= 0.997;
+      if (n.x < -30) n.x = W + 30; if (n.x > W + 30) n.x = -30;
+      if (n.y < -30) n.y = H + 30; if (n.y > H + 30) n.y = -30;
+      const pulse = Math.sin(t * n.ps + n.po) * 0.3 + 0.7;
+      const alpha = n.baseAlpha * pulse * NODE_ALPHA;
+      const mg = dist < MOUSE_RADIUS ? (1 - dist / MOUSE_RADIUS) * 0.7 : 0;
+      const fa = Math.min(alpha + mg, 1);
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r + mg * 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${NR},${NG},${NB},${fa})`; ctx.fill();
+      if (mg > 0.15) {
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r + mg * 8, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${NR},${NG},${NB},${mg * 0.12})`; ctx.fill();
+      }
+    }
+    ctx.lineWidth = isLight ? 1.2 : 1;
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i], b = nodes[j];
+        const dx = a.x - b.x, dy = a.y - b.y, d = Math.sqrt(dx*dx+dy*dy);
+        if (d < CONNECT_DIST) {
+          let al = (1 - d / CONNECT_DIST) * LINE_ALPHA;
+          const mx = (a.x+b.x)/2, my = (a.y+b.y)/2;
+          const md = Math.sqrt((mx-mouse.x)**2+(my-mouse.y)**2);
+          if (md < MOUSE_RADIUS) al += (1-md/MOUSE_RADIUS) * 0.4;
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = `rgba(${NR},${NG},${NB},${al})`; ctx.stroke();
+        }
+      }
+    }
+    if (mouse.x > 0) {
+      for (let s = 0; s < 5; s++) {
+        const st = ((t*0.0025+s*0.2)%1), idx = Math.floor((t*0.008+s*31)%nodes.length);
+        const a = nodes[idx], md = Math.sqrt((a.x-mouse.x)**2+(a.y-mouse.y)**2);
+        if (md < MOUSE_RADIUS) {
+          let nn = null, nd = Infinity;
+          for (let j = 0; j < nodes.length; j++) { if (j===idx) continue; const d2 = Math.sqrt((a.x-nodes[j].x)**2+(a.y-nodes[j].y)**2); if (d2<CONNECT_DIST&&d2<nd){nn=nodes[j];nd=d2;} }
+          if (nn) {
+            const sx=a.x+(nn.x-a.x)*st, sy=a.y+(nn.y-a.y)*st;
+            ctx.beginPath(); ctx.arc(sx,sy,2.2,0,Math.PI*2); ctx.fillStyle=`rgba(${NR},${NG},${NB},0.9)`; ctx.fill();
+            ctx.beginPath(); ctx.arc(sx,sy,7,0,Math.PI*2); ctx.fillStyle=`rgba(${NR},${NG},${NB},0.12)`; ctx.fill();
+          }
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  const hero = canvas.parentElement;
+  hero.addEventListener('mousemove', e => { const r=hero.getBoundingClientRect(); mouse.x=e.clientX-r.left; mouse.y=e.clientY-r.top; });
+  hero.addEventListener('mouseleave', () => { mouse.x=-9999; mouse.y=-9999; });
+  hero.addEventListener('touchmove', e => { const r=hero.getBoundingClientRect(); mouse.x=e.touches[0].clientX-r.left; mouse.y=e.touches[0].clientY-r.top; }, {passive:true});
+  hero.addEventListener('touchend', () => { mouse.x=-9999; mouse.y=-9999; });
+  window.addEventListener('resize', () => { resize(); createNodes(); });
+  resize(); createNodes(); requestAnimationFrame(draw);
+})();
+</script>
+
+</body>
+</html>
