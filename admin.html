@@ -465,9 +465,10 @@
         <label>Gültigkeit</label>
         <select class="form-input" id="ticketTtl">
           <option value="24">24 Stunden</option>
-          <option value="48" selected>48 Stunden</option>
+          <option value="48">48 Stunden</option>
           <option value="168">7 Tage</option>
           <option value="720">30 Tage</option>
+          <option value="0" selected>Nie (dauerhaft gültig)</option>
         </select>
       </div>
       <p class="error-msg" id="ticketModalError"></p>
@@ -1162,8 +1163,11 @@ async function submitTicket() {
     });
     document.getElementById('ticketCode').textContent = res.code;
     const expiresAt = new Date(res.expires_at);
-    document.getElementById('ticketExpires').textContent =
-      'Gültig bis ' + expiresAt.toLocaleString('de-AT') + ' · Einmalige Verwendung';
+    // Year 9999 is our "never expires" sentinel; show a friendlier label.
+    const neverExpires = expiresAt.getUTCFullYear() >= 9999;
+    document.getElementById('ticketExpires').textContent = neverExpires
+      ? 'Dauerhaft gültig · Einmalige Verwendung'
+      : 'Gültig bis ' + expiresAt.toLocaleString('de-AT') + ' · Einmalige Verwendung';
     document.getElementById('ticketForm').style.display = 'none';
     document.getElementById('ticketReveal').style.display = '';
   } catch (err) {
