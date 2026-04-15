@@ -368,6 +368,82 @@
       </tbody>
     </table>
   </div>
+
+  <!-- ── Relay Management ──────────────────────────────────── -->
+  <div class="toolbar" style="margin-top:40px;">
+    <h2>Sync-Relay</h2>
+    <div class="toolbar-actions">
+      <input type="text" class="search-input" id="relayUrlInput" placeholder="https://relay.example.com" style="min-width:260px;" />
+      <input type="password" class="search-input" id="relayTokenInput" placeholder="Relay-Admin-Token" style="min-width:200px;" />
+      <button class="btn btn-sm btn-accent" onclick="connectRelay()">Verbinden</button>
+    </div>
+  </div>
+  <p id="relayHint" style="font-size:12px;color:var(--fg-faint);margin-top:-12px;margin-bottom:16px;">
+    URL deines axion-relay-Servers und der <code>RELAY_ADMIN_TOKEN</code>. Die Werte werden nur in deinem Browser (localStorage) gespeichert.
+  </p>
+
+  <!-- Relay status card -->
+  <div id="relayDisconnected" class="table-wrap" style="padding:24px;text-align:center;">
+    <p style="color:var(--fg-muted);font-size:14px;">Noch kein Relay verbunden.</p>
+  </div>
+
+  <div id="relayConnected" style="display:none;">
+    <!-- Relay stats -->
+    <div class="stats-row" style="margin-top:8px;margin-bottom:24px;">
+      <div class="stat-card"><div class="stat-label">Teams</div><div class="stat-value" id="relayStatTeams">—</div></div>
+      <div class="stat-card"><div class="stat-label">Aktive Mitglieder</div><div class="stat-value" id="relayStatMembers">—</div></div>
+      <div class="stat-card"><div class="stat-label">Widerrufen</div><div class="stat-value" id="relayStatRevoked">—</div></div>
+      <div class="stat-card"><div class="stat-label">Gespeicherte Blobs</div><div class="stat-value" id="relayStatBlobs">—</div></div>
+    </div>
+
+    <div class="toolbar" style="margin-top:0;">
+      <h2 style="font-size:18px;">Teams auf dem Relay</h2>
+      <div class="toolbar-actions">
+        <span id="relayVersion" style="font-size:11px;color:var(--fg-faint);"></span>
+        <button class="btn btn-sm btn-ghost" onclick="refreshRelay()">Aktualisieren</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Team-ID</th>
+            <th>Gegründet</th>
+            <th>Mitglieder</th>
+            <th>Blobs</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody id="relayTeamsBody">
+          <tr><td colspan="5" class="empty-state"><p>Lade…</p></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Inline expanded members area -->
+    <div id="relayMembersWrap" style="display:none;margin-top:24px;">
+      <div class="toolbar" style="margin-top:0;">
+        <h2 style="font-size:16px;">Mitglieder von <span id="relayMembersTeamId" style="color:var(--accent);font-family:ui-monospace,SFMono-Regular,Monaco,Consolas,monospace;"></span></h2>
+        <button class="btn btn-sm btn-ghost" onclick="closeRelayMembers()">Schließen</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>User-ID</th>
+              <th>Gerät</th>
+              <th>Status</th>
+              <th>Beigetreten</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="relayMembersBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Create Modal -->
@@ -866,6 +942,149 @@ document.addEventListener('keydown', e => {
     document.getElementById('modalSubmitBtn').style.display = '';
   }
 });
+
+// ── Relay Management ─────────────────────────────────────────────────────
+//
+// Talks to an axion-relay server's /admin/* endpoints. URL + token live in
+// localStorage so they survive refreshes; the token never leaves the
+// browser except in the X-Admin-Token header when calling the relay.
+
+let relayUrl = '';
+let relayToken = '';
+
+(function initRelay() {
+  relayUrl = localStorage.getItem('axion_relay_url') || '';
+  relayToken = localStorage.getItem('axion_relay_token') || '';
+  const urlInput = document.getElementById('relayUrlInput');
+  const tokenInput = document.getElementById('relayTokenInput');
+  if (urlInput) urlInput.value = relayUrl;
+  if (tokenInput) tokenInput.value = relayToken;
+  if (relayUrl && relayToken) {
+    // Auto-connect on page load if we have saved creds. Silent on failure.
+    setTimeout(() => refreshRelay().catch(() => {}), 400);
+  }
+})();
+
+async function relayFetch(path, options = {}) {
+  if (!relayUrl || !relayToken) throw new Error('Relay nicht konfiguriert.');
+  const trimmed = relayUrl.replace(/\/+$/, '');
+  const res = await fetch(trimmed + path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Admin-Token': relayToken,
+      ...(options.headers || {}),
+    },
+  });
+  if (!res.ok) {
+    let detail = res.statusText;
+    try { const j = await res.json(); detail = j.detail || j.error || detail; } catch {}
+    throw new Error(`${res.status}: ${detail}`);
+  }
+  return res.json();
+}
+
+async function connectRelay() {
+  const url = document.getElementById('relayUrlInput').value.trim();
+  const token = document.getElementById('relayTokenInput').value.trim();
+  if (!url || !token) {
+    toast('Bitte URL und Token eingeben.', 'error');
+    return;
+  }
+  relayUrl = url;
+  relayToken = token;
+  try {
+    await refreshRelay();
+    localStorage.setItem('axion_relay_url', url);
+    localStorage.setItem('axion_relay_token', token);
+    toast('Relay verbunden.', 'success');
+  } catch (err) {
+    toast('Verbindung fehlgeschlagen: ' + err.message, 'error');
+    relayUrl = ''; relayToken = '';
+  }
+}
+
+async function refreshRelay() {
+  if (!relayUrl || !relayToken) return;
+  const [stats, teams] = await Promise.all([
+    relayFetch('/admin/stats'),
+    relayFetch('/admin/teams'),
+  ]);
+
+  document.getElementById('relayDisconnected').style.display = 'none';
+  document.getElementById('relayConnected').style.display = '';
+
+  document.getElementById('relayStatTeams').textContent = stats.teams;
+  document.getElementById('relayStatMembers').textContent = stats.members_active;
+  document.getElementById('relayStatRevoked').textContent = stats.members_revoked;
+  document.getElementById('relayStatBlobs').textContent = stats.blobs;
+  document.getElementById('relayVersion').textContent =
+    `v${stats.version} · Protokoll ${stats.protocol_version}`;
+
+  const body = document.getElementById('relayTeamsBody');
+  if (!teams.length) {
+    body.innerHTML = '<tr><td colspan="5" class="empty-state"><p>Keine Teams auf diesem Relay.</p></td></tr>';
+    return;
+  }
+  body.innerHTML = teams.map(t => `
+    <tr>
+      <td style="font-family:ui-monospace,SFMono-Regular,Monaco,Consolas,monospace;font-size:11px;">${esc(t.id)}</td>
+      <td>${formatDate(t.created_at)}</td>
+      <td>${t.members}</td>
+      <td>${t.blobs}</td>
+      <td><button class="btn btn-sm btn-ghost" onclick="openRelayMembers('${esc(t.id)}')">Mitglieder</button></td>
+    </tr>
+  `).join('');
+}
+
+async function openRelayMembers(teamId) {
+  document.getElementById('relayMembersWrap').style.display = '';
+  document.getElementById('relayMembersTeamId').textContent = teamId;
+  const body = document.getElementById('relayMembersBody');
+  body.innerHTML = '<tr><td colspan="6" class="empty-state"><p>Lade…</p></td></tr>';
+  try {
+    const members = await relayFetch(`/admin/teams/${encodeURIComponent(teamId)}/members`);
+    if (!members.length) {
+      body.innerHTML = '<tr><td colspan="6" class="empty-state"><p>Keine Mitglieder.</p></td></tr>';
+      return;
+    }
+    body.innerHTML = members.map(m => {
+      const revoked = m.status === 'revoked';
+      return `
+        <tr${revoked ? ' style="opacity:0.5;"' : ''}>
+          <td>${esc(m.display_name || '—')}</td>
+          <td style="font-family:ui-monospace,SFMono-Regular,Monaco,Consolas,monospace;font-size:11px;">${esc(m.user_id.slice(0,8))}…</td>
+          <td style="font-family:ui-monospace,SFMono-Regular,Monaco,Consolas,monospace;font-size:11px;">${esc(m.device_id.slice(0,8))}…</td>
+          <td><span class="badge-status ${revoked ? 'rejected' : 'approved'}"><span class="dot"></span>${revoked ? 'Widerrufen' : 'Aktiv'}</span></td>
+          <td>${formatDate(m.joined_at)}</td>
+          <td>${revoked ? '—' : `<button class="btn btn-sm btn-danger" onclick="revokeRelayMember('${esc(teamId)}','${esc(m.user_id)}','${esc(m.device_id)}')">Widerrufen</button>`}</td>
+        </tr>
+      `;
+    }).join('');
+    document.getElementById('relayMembersWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    body.innerHTML = `<tr><td colspan="6" class="empty-state"><p>Fehler: ${esc(err.message)}</p></td></tr>`;
+  }
+}
+
+function closeRelayMembers() {
+  document.getElementById('relayMembersWrap').style.display = 'none';
+}
+
+async function revokeRelayMember(teamId, userId, deviceId) {
+  if (!confirm(`Mitglied widerrufen?\n\nTeam: ${teamId.slice(0,8)}…\nUser: ${userId.slice(0,8)}…\n\nDas Gerät kann sich danach nicht mehr verbinden.`)) return;
+  try {
+    await relayFetch('/admin/members/revoke', {
+      method: 'POST',
+      body: JSON.stringify({ team_id: teamId, user_id: userId, device_id: deviceId }),
+    });
+    toast('Mitglied widerrufen.', 'success');
+    await openRelayMembers(teamId);
+    await refreshRelay();
+  } catch (err) {
+    toast('Fehler: ' + err.message, 'error');
+  }
+}
 </script>
 
 </body>
