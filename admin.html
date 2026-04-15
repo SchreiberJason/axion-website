@@ -400,6 +400,7 @@
       <h2 style="font-size:18px;">Teams auf dem Relay</h2>
       <div class="toolbar-actions">
         <span id="relayVersion" style="font-size:11px;color:var(--fg-faint);"></span>
+        <button class="btn btn-sm btn-accent" onclick="openNewTicketModal()">+ Neues Team</button>
         <button class="btn btn-sm btn-ghost" onclick="refreshRelay()">Aktualisieren</button>
       </div>
     </div>
@@ -441,6 +442,50 @@
           </thead>
           <tbody id="relayMembersBody"></tbody>
         </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Relay Ticket Modal -->
+<div class="modal-overlay" id="ticketModal">
+  <div class="modal" style="max-width:520px;">
+    <h3 id="ticketModalTitle">Neues Team-Ticket</h3>
+    <p style="font-size:13px;color:var(--fg-muted);margin-bottom:16px;">
+      Gib diesen Einmal-Code an die Person, die das Team gründen soll. Sie trägt ihn im Axion-Client unter
+      <strong>Einstellungen → Team → Team gründen → Token</strong> ein. Nach dem ersten erfolgreichen Gründen ist der Code verbraucht.
+    </p>
+
+    <div id="ticketForm">
+      <div class="form-group">
+        <label>Notiz (optional)</label>
+        <input type="text" class="form-input" id="ticketNote" placeholder="z. B. „Team Georg Müller" — nur für deine Übersicht" />
+      </div>
+      <div class="form-group">
+        <label>Gültigkeit</label>
+        <select class="form-input" id="ticketTtl">
+          <option value="24">24 Stunden</option>
+          <option value="48" selected>48 Stunden</option>
+          <option value="168">7 Tage</option>
+          <option value="720">30 Tage</option>
+        </select>
+      </div>
+      <p class="error-msg" id="ticketModalError"></p>
+      <div class="modal-footer">
+        <button class="btn btn-sm btn-ghost" onclick="closeTicketModal()">Abbrechen</button>
+        <button class="btn btn-sm btn-accent" onclick="submitTicket()">Code erstellen</button>
+      </div>
+    </div>
+
+    <div id="ticketReveal" style="display:none;">
+      <label style="font-size:12px;color:var(--fg-muted);">Dein Einmal-Code</label>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+        <code id="ticketCode" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:13px;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Monaco,Consolas,monospace;"></code>
+        <button class="btn btn-sm btn-accent" onclick="copyTicket()">Kopieren</button>
+      </div>
+      <p id="ticketExpires" style="font-size:11px;color:var(--fg-faint);margin-top:12px;"></p>
+      <div class="modal-footer">
+        <button class="btn btn-sm btn-accent" onclick="closeTicketModal()">Fertig</button>
       </div>
     </div>
   </div>
@@ -1083,6 +1128,57 @@ async function revokeRelayMember(teamId, userId, deviceId) {
     await refreshRelay();
   } catch (err) {
     toast('Fehler: ' + err.message, 'error');
+  }
+}
+
+// ─── One-shot team-bootstrap tickets ──────────────────────────────────
+
+function openNewTicketModal() {
+  if (!relayUrl || !relayToken) {
+    toast('Erst mit dem Relay verbinden.', 'error');
+    return;
+  }
+  document.getElementById('ticketNote').value = '';
+  document.getElementById('ticketTtl').value = '48';
+  document.getElementById('ticketModalError').classList.remove('visible');
+  document.getElementById('ticketForm').style.display = '';
+  document.getElementById('ticketReveal').style.display = 'none';
+  document.getElementById('ticketModal').classList.add('visible');
+}
+
+function closeTicketModal() {
+  document.getElementById('ticketModal').classList.remove('visible');
+}
+
+async function submitTicket() {
+  const note = document.getElementById('ticketNote').value.trim();
+  const ttl = parseInt(document.getElementById('ticketTtl').value, 10);
+  const errEl = document.getElementById('ticketModalError');
+  errEl.classList.remove('visible');
+  try {
+    const res = await relayFetch('/admin/tickets', {
+      method: 'POST',
+      body: JSON.stringify({ note: note || null, ttl_hours: ttl }),
+    });
+    document.getElementById('ticketCode').textContent = res.code;
+    const expiresAt = new Date(res.expires_at);
+    document.getElementById('ticketExpires').textContent =
+      'Gültig bis ' + expiresAt.toLocaleString('de-AT') + ' · Einmalige Verwendung';
+    document.getElementById('ticketForm').style.display = 'none';
+    document.getElementById('ticketReveal').style.display = '';
+  } catch (err) {
+    errEl.textContent = 'Fehler: ' + err.message;
+    errEl.classList.add('visible');
+  }
+}
+
+async function copyTicket() {
+  const code = document.getElementById('ticketCode').textContent;
+  try {
+    await navigator.clipboard.writeText(code);
+    toast('In Zwischenablage kopiert.', 'success');
+  } catch {
+    toast('Kopieren fehlgeschlagen — bitte manuell markieren.', 'error');
   }
 }
 </script>
