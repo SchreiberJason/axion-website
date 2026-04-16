@@ -12,159 +12,306 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --bg: #0a0a0a; --bg-rgb: 10,10,10;
-      --surface: #131416; --surface2: #1a1b20;
-      --border: #1f2130;
+      --bg: #0a0b0d; --bg-rgb: 10,11,13;
+      --surface: #14151a; --surface-2: #1b1d24; --surface-3: #232630;
+      --border: #262932; --border-strong: #343846;
       --fg: #ffffff; --fg-rgb: 255,255,255;
-      --fg-muted: #a0a0a0; --fg-faint: #555;
+      --fg-muted: #9aa0ab; --fg-faint: #5a5f6b;
       --brand: #028856; --brand-rgb: 2,136,86;
       --accent: #38d9a3; --accent-rgb: 56,217,163;
-      --hover: #015e38;
-      --card-shadow: 0 12px 40px rgba(0,0,0,0.3);
-      --danger: #e53e3e; --danger-hover: #c53030;
-      --warning: #d69e2e;
+      --accent-2: #5fe5b2;
+      --danger: #ef4444; --danger-rgb: 239,68,68;
+      --warning: #f59e0b; --warning-rgb: 245,158,11;
+      --purple: #a855f7;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.25);
+      --shadow-lg: 0 12px 32px rgba(0,0,0,0.35);
     }
 
     @media (prefers-color-scheme: light) {
       :root {
-        --bg: #f5f5f5; --bg-rgb: 245,245,245;
-        --surface: #ffffff; --surface2: #f0f0f0;
-        --border: #ddd;
-        --fg: #111111; --fg-rgb: 17,17,17;
-        --fg-muted: #555555; --fg-faint: #999;
-        --brand: #028856; --brand-rgb: 2,136,86;
-        --accent: #02784c; --accent-rgb: 2,120,76;
-        --hover: #016940;
-        --card-shadow: 0 8px 30px rgba(0,0,0,0.08);
-        --danger: #e53e3e; --danger-hover: #c53030;
-        --warning: #d69e2e;
+        --bg: #f6f7f9; --bg-rgb: 246,247,249;
+        --surface: #ffffff; --surface-2: #f0f2f5; --surface-3: #e5e8ed;
+        --border: #e4e6eb; --border-strong: #c9ccd4;
+        --fg: #0f1115; --fg-rgb: 15,17,21;
+        --fg-muted: #4a5058; --fg-faint: #8a8f98;
+        --accent: #0f8e5f;
+        --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+        --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+        --shadow-lg: 0 8px 28px rgba(0,0,0,0.08);
       }
     }
 
-    html { scroll-behavior: smooth; }
     body {
       font-family: 'Inter', -apple-system, sans-serif;
       background: var(--bg); color: var(--fg);
-      line-height: 1.6; -webkit-font-smoothing: antialiased;
+      line-height: 1.5; -webkit-font-smoothing: antialiased;
+      font-size: 14px;
+      min-height: 100vh;
     }
 
-    /* ── Nav ───────────────────────── */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(var(--bg-rgb),0.82);
-      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-      border-bottom: 1px solid var(--border);
-    }
-    nav .container { display: flex; align-items: center; justify-content: space-between; height: 64px; }
-    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--fg); }
-    .nav-brand img { width: 32px; height: 32px; border-radius: 8px; }
-    .nav-brand span { font-weight: 700; font-size: 18px; }
-    .nav-tag { font-size: 11px; font-weight: 600; color: var(--accent); background: rgba(var(--accent-rgb),0.1); padding: 3px 10px; border-radius: 6px; }
-    .nav-right { display: flex; align-items: center; gap: 16px; }
-    .nav-right button { background: none; border: 1px solid var(--border); color: var(--fg-muted); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: inherit; }
-    .nav-right button:hover { border-color: var(--fg-faint); color: var(--fg); }
-
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-
-    /* ── Login ─────────────────────── */
+    /* ── Login view ─────────────────── */
     .login-wrap {
       min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      background: radial-gradient(ellipse at top, rgba(var(--accent-rgb),0.08), transparent 60%),
+                  radial-gradient(ellipse at bottom, rgba(var(--brand-rgb),0.06), transparent 60%),
+                  var(--bg);
     }
     .login-card {
       background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
-      padding: 48px; max-width: 420px; width: 100%; text-align: center;
+      padding: 44px 40px; max-width: 420px; width: 100%; text-align: center;
+      box-shadow: var(--shadow-lg);
     }
-    .login-card h1 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
-    .login-card p { font-size: 14px; color: var(--fg-muted); margin-bottom: 32px; }
-    .login-card .logo { width: 64px; height: 64px; border-radius: 16px; margin-bottom: 24px; }
-
-    /* ── Forms ─────────────────────── */
-    .form-group { margin-bottom: 16px; text-align: left; }
-    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--fg-muted); margin-bottom: 6px; }
-    .form-input {
-      width: 100%; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--border);
-      background: var(--surface2); color: var(--fg); font-size: 14px; font-family: inherit;
-      transition: border-color 0.2s; outline: none;
+    .login-card .logo {
+      width: 56px; height: 56px; border-radius: 14px; margin: 0 auto 20px;
+      display: block;
     }
-    .form-input:focus { border-color: var(--accent); }
-    .form-input::placeholder { color: var(--fg-faint); }
-    select.form-input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23555' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    textarea.form-input { resize: vertical; min-height: 80px; }
+    .login-card h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 6px; }
+    .login-card p { font-size: 13px; color: var(--fg-muted); margin-bottom: 28px; }
 
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 11px 24px; border-radius: 10px; font-size: 14px; font-weight: 600;
-      cursor: pointer; border: none; transition: all 0.2s; font-family: inherit;
+    /* ── App shell (sidebar + content) ─ */
+    .app-shell {
+      display: none;
+      min-height: 100vh;
     }
-    .btn-primary { background: var(--brand); color: #fff; width: 100%; }
-    .btn-primary:hover { background: var(--hover); }
-    .btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 8px; }
-    .btn-ghost { background: none; border: 1px solid var(--border); color: var(--fg-muted); }
-    .btn-ghost:hover { border-color: var(--fg-faint); color: var(--fg); }
-    .btn-danger { background: none; border: 1px solid rgba(229,62,62,0.3); color: var(--danger); }
-    .btn-danger:hover { background: rgba(229,62,62,0.1); border-color: var(--danger); }
-    .btn-accent { background: rgba(var(--accent-rgb),0.1); border: 1px solid rgba(var(--accent-rgb),0.2); color: var(--accent); }
-    .btn-accent:hover { background: rgba(var(--accent-rgb),0.15); border-color: var(--accent); }
+    .app-shell.visible { display: flex; }
 
-    .error-msg { color: var(--danger); font-size: 13px; margin-top: 12px; display: none; }
-    .error-msg.visible { display: block; }
+    /* Sidebar */
+    .app-sidebar {
+      width: 248px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      flex-shrink: 0;
+    }
+    .sidebar-brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-brand img {
+      width: 30px; height: 30px; border-radius: 8px;
+    }
+    .sidebar-brand-text {
+      display: flex; flex-direction: column; line-height: 1.2;
+    }
+    .sidebar-brand-text strong { font-size: 14px; font-weight: 700; }
+    .sidebar-brand-text small { font-size: 10px; color: var(--fg-faint); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
 
-    /* ── Dashboard ─────────────────── */
-    .dashboard { padding-top: 88px; padding-bottom: 40px; display: none; }
-    .dashboard.visible { display: block; }
+    .sidebar-nav {
+      flex: 1;
+      padding: 14px 10px;
+      overflow-y: auto;
+    }
+    .nav-section-label {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--fg-faint);
+      padding: 10px 12px 6px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; border-radius: 10px;
+      font-size: 13px; font-weight: 500; color: var(--fg-muted);
+      cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+      font-family: inherit;
+      transition: background 0.15s, color 0.15s;
+      margin-bottom: 2px;
+    }
+    .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .nav-item:hover { background: var(--surface-2); color: var(--fg); }
+    .nav-item.active {
+      background: rgba(var(--accent-rgb), 0.12);
+      color: var(--accent);
+    }
+    .nav-item .nav-badge {
+      margin-left: auto;
+      font-size: 10px; font-weight: 700;
+      background: var(--danger); color: #fff;
+      min-width: 18px; height: 18px; padding: 0 6px;
+      border-radius: 9px;
+      display: inline-flex; align-items: center; justify-content: center;
+      display: none;
+    }
+    .nav-item .nav-badge.visible { display: inline-flex; }
+    .nav-item.active .nav-badge { background: var(--accent); color: var(--surface); }
 
-    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+    .sidebar-footer {
+      padding: 12px;
+      border-top: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .sidebar-footer .nav-item { font-size: 12px; }
+
+    /* Content */
+    .app-content {
+      flex: 1;
+      min-width: 0;
+      display: flex; flex-direction: column;
+    }
+    .content-header {
+      height: 64px;
+      padding: 0 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+      background: rgba(var(--bg-rgb), 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .content-header h1 {
+      font-size: 18px; font-weight: 700; letter-spacing: -0.01em;
+    }
+    .content-header-actions {
+      display: flex; gap: 8px; align-items: center;
+    }
+
+    .view-body {
+      padding: 28px 32px 48px;
+      max-width: 1400px; width: 100%;
+    }
+
+    /* View switching */
+    .view { display: none; }
+    .view.active { display: block; animation: viewIn 0.2s ease; }
+    @keyframes viewIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+    /* ── Cards & stat tiles ───────── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      overflow: hidden;
+    }
+    .card-padded { padding: 20px; }
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .card-header h2 { font-size: 14px; font-weight: 700; }
+    .card-header .card-header-sub { font-size: 11px; color: var(--fg-faint); font-weight: 500; margin-top: 1px; }
+
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+      margin-bottom: 24px;
+    }
     .stat-card {
       background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-      padding: 20px 24px;
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
     }
-    .stat-card .stat-label { font-size: 12px; font-weight: 600; color: var(--fg-faint); margin-bottom: 4px; }
-    .stat-card .stat-value { font-size: 28px; font-weight: 800; color: var(--accent); }
-    .stat-card .stat-sub { font-size: 11px; color: var(--fg-faint); margin-top: 2px; }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      opacity: 0.6;
+    }
+    .stat-card.alt::before { background: linear-gradient(90deg, var(--brand), var(--accent)); }
+    .stat-card.danger::before { background: linear-gradient(90deg, var(--warning), var(--danger)); }
+    .stat-card.purple::before { background: linear-gradient(90deg, var(--purple), #ec4899); }
+    .stat-label {
+      font-size: 11px; font-weight: 600; color: var(--fg-faint);
+      text-transform: uppercase; letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+    .stat-value { font-size: 26px; font-weight: 800; color: var(--fg); letter-spacing: -0.02em; }
+    .stat-sub { font-size: 11px; color: var(--fg-faint); margin-top: 4px; }
+
+    /* ── Forms ─────────────────────── */
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block; font-size: 11px; font-weight: 600; color: var(--fg-muted);
+      margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .form-input {
+      width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--surface-2); color: var(--fg); font-size: 13px; font-family: inherit;
+      transition: all 0.15s; outline: none;
+    }
+    .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.15); }
+    .form-input::placeholder { color: var(--fg-faint); }
+    select.form-input {
+      cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%239aa0ab' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      padding-right: 32px;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    textarea.form-input { resize: vertical; min-height: 80px; font-family: inherit; }
+
+    /* ── Buttons ───────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: 1px solid transparent; transition: all 0.15s;
+      font-family: inherit; white-space: nowrap;
+    }
+    .btn-primary { background: var(--brand); color: #fff; width: 100%; padding: 11px 16px; }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+    .btn-ghost { background: transparent; border-color: var(--border); color: var(--fg-muted); }
+    .btn-ghost:hover { border-color: var(--border-strong); color: var(--fg); background: var(--surface-2); }
+    .btn-danger { background: transparent; border-color: rgba(var(--danger-rgb),0.3); color: var(--danger); }
+    .btn-danger:hover { background: rgba(var(--danger-rgb),0.1); border-color: var(--danger); }
+    .btn-accent {
+      background: rgba(var(--accent-rgb),0.1); border-color: rgba(var(--accent-rgb),0.25); color: var(--accent);
+    }
+    .btn-accent:hover { background: rgba(var(--accent-rgb),0.18); border-color: rgba(var(--accent-rgb),0.45); }
+    .btn-solid { background: var(--accent); color: var(--bg); border: none; font-weight: 700; }
+    .btn-solid:hover { filter: brightness(1.05); }
+
+    .error-msg { color: var(--danger); font-size: 12px; margin-top: 10px; display: none; }
+    .error-msg.visible { display: block; }
 
     /* ── Toolbar ───────────────────── */
     .toolbar {
-      display: flex; align-items: center; justify-content: space-between; gap: 16px;
-      margin-bottom: 20px; flex-wrap: wrap;
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      margin-bottom: 14px; flex-wrap: wrap;
     }
-    .toolbar h2 { font-size: 20px; font-weight: 800; }
-    .toolbar-actions { display: flex; gap: 10px; align-items: center; }
+    .toolbar h2 { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+    .toolbar-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
     .search-input {
-      padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border);
-      background: var(--surface); color: var(--fg); font-size: 13px; font-family: inherit;
-      outline: none; width: 240px; transition: border-color 0.2s;
+      padding: 8px 12px 8px 32px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--surface-2); color: var(--fg); font-size: 13px; font-family: inherit;
+      outline: none; width: 240px; transition: all 0.15s;
+      background-image: url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239aa0ab' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: 10px center;
     }
-    .search-input:focus { border-color: var(--accent); }
-    .search-input::placeholder { color: var(--fg-faint); }
+    .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.12); }
     .filter-select {
-      padding: 8px 30px 8px 12px; border-radius: 8px; border: 1px solid var(--border);
-      background: var(--surface); color: var(--fg-muted); font-size: 13px; font-family: inherit;
+      padding: 8px 30px 8px 12px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--surface-2); color: var(--fg-muted); font-size: 13px; font-family: inherit;
       cursor: pointer; outline: none; appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23555' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%239aa0ab' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
       background-repeat: no-repeat; background-position: right 10px center;
     }
 
     /* ── Table ─────────────────────── */
     .table-wrap {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
       overflow-x: auto;
     }
-    table { width: 100%; border-collapse: collapse; min-width: 900px; }
-    thead { background: var(--surface2); }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--surface-2); position: sticky; top: 0; }
     th {
-      text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.05em; color: var(--fg-faint);
+      text-align: left; padding: 11px 16px; font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-faint);
       border-bottom: 1px solid var(--border);
     }
     td {
-      padding: 14px 16px; font-size: 13px; border-bottom: 1px solid var(--border);
+      padding: 13px 16px; font-size: 13px; border-bottom: 1px solid var(--border);
       color: var(--fg-muted); vertical-align: middle;
     }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(var(--accent-rgb),0.02); }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr { transition: background 0.12s; }
+    tbody tr:hover td { background: rgba(var(--accent-rgb),0.025); }
     .td-name { color: var(--fg); font-weight: 600; }
-    .td-key { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: var(--fg-muted); letter-spacing: 0.02em; }
+    .td-key { font-family: ui-monospace, 'SF Mono', Monaco, Consolas, monospace; font-size: 12px; color: var(--fg-muted); letter-spacing: 0.02em; }
     .td-actions { display: flex; gap: 6px; flex-wrap: nowrap; white-space: nowrap; }
 
     /* ── Badges ────────────────────── */
@@ -268,16 +415,6 @@
 </head>
 <body>
 
-<nav>
-  <div class="container">
-    <a href="index.html" class="nav-brand"><img src="assets/logo.png" alt="Axion" /><span>Axion</span></a>
-    <div class="nav-right" id="navRight" style="display:none;">
-      <span class="nav-tag">Admin</span>
-      <button onclick="logout()">Abmelden</button>
-    </div>
-  </div>
-</nav>
-
 <!-- Login -->
 <div class="login-wrap" id="loginView">
   <div class="login-card">
@@ -293,182 +430,311 @@
   </div>
 </div>
 
-<!-- Dashboard -->
-<div class="container dashboard" id="dashboardView">
+<!-- App Shell -->
+<div class="app-shell" id="appShell">
 
-  <!-- Stats -->
-  <div class="stats-row" id="statsRow">
-    <div class="stat-card"><div class="stat-label">Lizenzen gesamt</div><div class="stat-value" id="statTotal">—</div></div>
-    <div class="stat-card"><div class="stat-label">Aktiv</div><div class="stat-value" id="statActive">—</div></div>
-    <div class="stat-card"><div class="stat-label">Aktivierte Geräte</div><div class="stat-value" id="statDevices">—</div></div>
-    <div class="stat-card"><div class="stat-label">Bald ablaufend</div><div class="stat-value" id="statExpiring">—</div><div class="stat-sub">nächste 30 Tage</div></div>
-  </div>
+  <!-- Sidebar -->
+  <aside class="app-sidebar">
+    <a href="index.html" class="sidebar-brand">
+      <img src="assets/logo.png" alt="Axion" />
+      <div class="sidebar-brand-text">
+        <strong>Axion</strong>
+        <small>Admin</small>
+      </div>
+    </a>
 
-  <!-- Requests Section -->
-  <div class="toolbar" style="margin-top:8px;">
-    <h2>Anfragen <span id="pendingBadge" style="display:inline-flex;align-items:center;justify-content:center;background:var(--danger);color:#fff;font-size:11px;font-weight:700;min-width:22px;height:22px;border-radius:11px;padding:0 7px;margin-left:8px;vertical-align:middle;"></span></h2>
-  </div>
-  <div class="table-wrap" style="margin-bottom:40px;" id="requestsWrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>E-Mail</th>
-          <th>Plan</th>
-          <th>Nachricht</th>
-          <th>Status</th>
-          <th>Eingegangen</th>
-          <th>Aktionen</th>
-        </tr>
-      </thead>
-      <tbody id="requestsTableBody">
-        <tr><td colspan="7" class="empty-state"><p>Lade Anfragen...</p></td></tr>
-      </tbody>
-    </table>
-  </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Übersicht</div>
+      <button class="nav-item active" data-view="overview" onclick="switchView('overview')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" data-view="requests" onclick="switchView('requests')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 9h16"/><path d="M9 4v16"/></svg>
+        Anfragen
+        <span class="nav-badge" id="navRequestsBadge">0</span>
+      </button>
+      <button class="nav-item" data-view="licenses" onclick="switchView('licenses')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M7 8V6a5 5 0 0110 0v2"/></svg>
+        Lizenzen
+      </button>
 
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <h2>Lizenzen</h2>
-    <div class="toolbar-actions">
-      <input type="text" class="search-input" id="searchInput" placeholder="Suche nach Name, E-Mail, Schlüssel..." oninput="renderTable()" />
-      <select class="filter-select" id="filterPlan" onchange="renderTable()">
-        <option value="">Alle Pläne</option>
-        <option value="starter">Starter</option>
-        <option value="professional">Professional</option>
-        <option value="enterprise">Enterprise</option>
-      </select>
-      <select class="filter-select" id="filterStatus" onchange="renderTable()">
-        <option value="">Alle Status</option>
-        <option value="active">Aktiv</option>
-        <option value="inactive">Deaktiviert</option>
-        <option value="expired">Abgelaufen</option>
-      </select>
-      <button class="btn btn-sm btn-accent" onclick="openCreateModal()">+ Neue Lizenz</button>
+      <div class="nav-section-label" style="margin-top:14px;">Sync</div>
+      <button class="nav-item" data-view="relay" onclick="switchView('relay')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/><circle cx="5" cy="12" r="2"/></svg>
+        Relay
+        <span class="nav-badge" id="navRelayBadge">•</span>
+      </button>
+      <button class="nav-item" data-view="tickets" onclick="switchView('tickets')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h14a2 2 0 012 2v3a2 2 0 000 4v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3a2 2 0 000-4V7z"/><path d="M13 5v2M13 11v2M13 17v2"/></svg>
+        Team-Tickets
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="nav-item" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Abmelden
+      </button>
     </div>
-  </div>
+  </aside>
 
-  <!-- Table -->
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Kunde</th>
-          <th>Lizenzschlüssel</th>
-          <th>Plan</th>
-          <th>Geräte</th>
-          <th>Status</th>
-          <th>Ablaufdatum</th>
-          <th>Erstellt</th>
-          <th>Aktionen</th>
-        </tr>
-      </thead>
-      <tbody id="licenseTableBody">
-        <tr><td colspan="8" class="empty-state"><p>Lade Lizenzen...</p></td></tr>
-      </tbody>
-    </table>
-  </div>
+  <!-- Content -->
+  <main class="app-content">
 
-  <!-- ── Relay Management ──────────────────────────────────── -->
-  <div class="toolbar" style="margin-top:40px;">
-    <h2>Sync-Relay</h2>
-    <div class="toolbar-actions">
-      <input type="text" class="search-input" id="relayUrlInput" placeholder="https://relay.example.com" style="min-width:260px;" />
-      <input type="password" class="search-input" id="relayTokenInput" placeholder="Relay-Admin-Token" style="min-width:200px;" />
-      <button class="btn btn-sm btn-accent" onclick="connectRelay()">Verbinden</button>
-    </div>
-  </div>
-  <p id="relayHint" style="font-size:12px;color:var(--fg-faint);margin-top:-12px;margin-bottom:16px;">
-    URL deines axion-relay-Servers und der <code>RELAY_ADMIN_TOKEN</code>. Die Werte werden nur in deinem Browser (localStorage) gespeichert.
-  </p>
+    <!-- ── Overview view ────────────────────────────────── -->
+    <div class="view active" id="view-overview">
+      <header class="content-header">
+        <h1>Dashboard</h1>
+        <div class="content-header-actions">
+          <button class="btn btn-sm btn-ghost" onclick="fetchLicenses();fetchRequests();">Aktualisieren</button>
+        </div>
+      </header>
+      <div class="view-body">
+        <div class="stats-row" id="statsRow">
+          <div class="stat-card"><div class="stat-label">Lizenzen gesamt</div><div class="stat-value" id="statTotal">—</div></div>
+          <div class="stat-card alt"><div class="stat-label">Aktiv</div><div class="stat-value" id="statActive">—</div></div>
+          <div class="stat-card purple"><div class="stat-label">Aktivierte Geräte</div><div class="stat-value" id="statDevices">—</div></div>
+          <div class="stat-card danger"><div class="stat-label">Bald ablaufend</div><div class="stat-value" id="statExpiring">—</div><div class="stat-sub">nächste 30 Tage</div></div>
+        </div>
 
-  <!-- Relay status card -->
-  <div id="relayDisconnected" class="table-wrap" style="padding:24px;text-align:center;">
-    <p style="color:var(--fg-muted);font-size:14px;">Noch kein Relay verbunden.</p>
-  </div>
+        <div class="card" style="margin-bottom:18px;">
+          <div class="card-header">
+            <div>
+              <h2>Offene Anfragen</h2>
+              <div class="card-header-sub">Neue Lizenz-Interessenten aus dem Formular</div>
+            </div>
+            <button class="btn btn-sm btn-ghost" onclick="switchView('requests')">Alle anzeigen</button>
+          </div>
+          <div id="overviewRequestsEmpty" class="empty-state" style="padding:24px;">
+            <p>Alles bearbeitet — keine offenen Anfragen.</p>
+          </div>
+          <div id="overviewRequestsList" style="display:none;"></div>
+        </div>
 
-  <div id="relayConnected" style="display:none;">
-    <!-- Relay stats -->
-    <div class="stats-row" style="margin-top:8px;margin-bottom:24px;">
-      <div class="stat-card"><div class="stat-label">Teams</div><div class="stat-value" id="relayStatTeams">—</div></div>
-      <div class="stat-card"><div class="stat-label">Aktive Mitglieder</div><div class="stat-value" id="relayStatMembers">—</div></div>
-      <div class="stat-card"><div class="stat-label">Widerrufen</div><div class="stat-value" id="relayStatRevoked">—</div></div>
-      <div class="stat-card"><div class="stat-label">Gespeicherte Blobs</div><div class="stat-value" id="relayStatBlobs">—</div></div>
-    </div>
-
-    <div class="toolbar" style="margin-top:0;">
-      <h2 style="font-size:18px;">Teams auf dem Relay</h2>
-      <div class="toolbar-actions">
-        <span id="relayVersion" style="font-size:11px;color:var(--fg-faint);"></span>
-        <button class="btn btn-sm btn-accent" onclick="openNewTicketModal()">+ Neues Team</button>
-        <button class="btn btn-sm btn-ghost" onclick="refreshRelay()">Aktualisieren</button>
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Kürzlich erstellte Lizenzen</h2>
+              <div class="card-header-sub">Letzte fünf Einträge</div>
+            </div>
+            <button class="btn btn-sm btn-ghost" onclick="switchView('licenses')">Alle Lizenzen</button>
+          </div>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Kunde</th>
+                  <th>Plan</th>
+                  <th>Status</th>
+                  <th>Erstellt</th>
+                </tr>
+              </thead>
+              <tbody id="overviewLicensesBody">
+                <tr><td colspan="4" class="empty-state"><p>Lade…</p></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Team-ID</th>
-            <th>Gegründet</th>
-            <th>Mitglieder</th>
-            <th>Blobs</th>
-            <th>Details</th>
-          </tr>
-        </thead>
-        <tbody id="relayTeamsBody">
-          <tr><td colspan="5" class="empty-state"><p>Lade…</p></td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Inline expanded members area -->
-    <div id="relayMembersWrap" style="display:none;margin-top:24px;">
-      <div class="toolbar" style="margin-top:0;">
-        <h2 style="font-size:16px;">Mitglieder von <span id="relayMembersTeamId" style="color:var(--accent);font-family:ui-monospace,SFMono-Regular,Monaco,Consolas,monospace;"></span></h2>
-        <button class="btn btn-sm btn-ghost" onclick="closeRelayMembers()">Schließen</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>User-ID</th>
-              <th>Gerät</th>
-              <th>Status</th>
-              <th>Beigetreten</th>
-              <th>Aktion</th>
-            </tr>
-          </thead>
-          <tbody id="relayMembersBody"></tbody>
-        </table>
+    <!-- ── Requests view ───────────────────────────────── -->
+    <div class="view" id="view-requests">
+      <header class="content-header">
+        <h1>Anfragen <span id="pendingBadge" style="display:inline-flex;align-items:center;justify-content:center;background:var(--danger);color:#fff;font-size:11px;font-weight:700;min-width:22px;height:22px;border-radius:11px;padding:0 7px;margin-left:8px;vertical-align:middle;"></span></h1>
+        <div class="content-header-actions">
+          <button class="btn btn-sm btn-ghost" onclick="fetchRequests()">Aktualisieren</button>
+        </div>
+      </header>
+      <div class="view-body">
+        <div class="table-wrap" id="requestsWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>E-Mail</th>
+                <th>Plan</th>
+                <th>Nachricht</th>
+                <th>Status</th>
+                <th>Eingegangen</th>
+                <th>Aktionen</th>
+              </tr>
+            </thead>
+            <tbody id="requestsTableBody">
+              <tr><td colspan="7" class="empty-state"><p>Lade Anfragen...</p></td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- Tickets list -->
-    <div style="margin-top:24px;">
-      <div class="toolbar" style="margin-top:0;">
-        <h2 style="font-size:16px;">Team-Tickets</h2>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Notiz</th>
-              <th>Erstellt</th>
-              <th>Gültigkeit</th>
-              <th>Status</th>
-              <th>Aktion</th>
-            </tr>
-          </thead>
-          <tbody id="relayTicketsBody">
-            <tr><td colspan="6" class="empty-state"><p>Lade…</p></td></tr>
-          </tbody>
-        </table>
+    <!-- ── Licenses view ───────────────────────────────── -->
+    <div class="view" id="view-licenses">
+      <header class="content-header">
+        <h1>Lizenzen</h1>
+        <div class="content-header-actions">
+          <input type="text" class="search-input" id="searchInput" placeholder="Suche nach Name, E-Mail, Schlüssel..." oninput="renderTable()" />
+          <select class="filter-select" id="filterPlan" onchange="renderTable()">
+            <option value="">Alle Pläne</option>
+            <option value="starter">Starter</option>
+            <option value="professional">Professional</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
+          <select class="filter-select" id="filterStatus" onchange="renderTable()">
+            <option value="">Alle Status</option>
+            <option value="active">Aktiv</option>
+            <option value="inactive">Deaktiviert</option>
+            <option value="expired">Abgelaufen</option>
+          </select>
+          <button class="btn btn-sm btn-accent" onclick="openCreateModal()">+ Neue Lizenz</button>
+        </div>
+      </header>
+      <div class="view-body">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Kunde</th>
+                <th>Lizenzschlüssel</th>
+                <th>Plan</th>
+                <th>Geräte</th>
+                <th>Status</th>
+                <th>Ablaufdatum</th>
+                <th>Erstellt</th>
+                <th>Aktionen</th>
+              </tr>
+            </thead>
+            <tbody id="licenseTableBody">
+              <tr><td colspan="8" class="empty-state"><p>Lade Lizenzen...</p></td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-  </div>
+
+    <!-- ── Relay view ─────────────────────────────────── -->
+    <div class="view" id="view-relay">
+      <header class="content-header">
+        <h1>Sync-Relay</h1>
+        <div class="content-header-actions">
+          <span id="relayVersion" style="font-size:11px;color:var(--fg-faint);"></span>
+          <button class="btn btn-sm btn-ghost" onclick="refreshRelay()">Aktualisieren</button>
+          <button class="btn btn-sm btn-accent" onclick="openNewTicketModal()">+ Neues Team</button>
+        </div>
+      </header>
+      <div class="view-body">
+        <div class="card card-padded" style="margin-bottom:18px;">
+          <h2 style="font-size:13px;font-weight:700;margin-bottom:4px;">Verbindung</h2>
+          <p style="font-size:12px;color:var(--fg-faint);margin-bottom:14px;">
+            URL deines axion-relay-Servers und der <code>RELAY_ADMIN_TOKEN</code>. Werte werden nur im Browser (localStorage) gespeichert.
+          </p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input type="text" class="search-input" id="relayUrlInput" placeholder="https://relay.example.com" style="flex:1;min-width:240px;" />
+            <input type="password" class="search-input" id="relayTokenInput" placeholder="Relay-Admin-Token" style="flex:1;min-width:200px;" />
+            <button class="btn btn-sm btn-accent" onclick="connectRelay()">Verbinden</button>
+          </div>
+          <p id="relayHint" style="display:none;"></p>
+        </div>
+
+        <div id="relayDisconnected" class="card card-padded" style="text-align:center;">
+          <p style="color:var(--fg-muted);font-size:14px;">Noch kein Relay verbunden.</p>
+        </div>
+
+        <div id="relayConnected" style="display:none;">
+          <div class="stats-row">
+            <div class="stat-card"><div class="stat-label">Teams</div><div class="stat-value" id="relayStatTeams">—</div></div>
+            <div class="stat-card alt"><div class="stat-label">Aktive Mitglieder</div><div class="stat-value" id="relayStatMembers">—</div></div>
+            <div class="stat-card danger"><div class="stat-label">Widerrufen</div><div class="stat-value" id="relayStatRevoked">—</div></div>
+            <div class="stat-card purple"><div class="stat-label">Gespeicherte Blobs</div><div class="stat-value" id="relayStatBlobs">—</div></div>
+          </div>
+
+          <div class="card" style="margin-bottom:18px;">
+            <div class="card-header">
+              <h2>Teams auf dem Relay</h2>
+            </div>
+            <div style="overflow-x:auto;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Team-ID</th>
+                    <th>Gegründet</th>
+                    <th>Mitglieder</th>
+                    <th>Blobs</th>
+                    <th>Details</th>
+                  </tr>
+                </thead>
+                <tbody id="relayTeamsBody">
+                  <tr><td colspan="5" class="empty-state"><p>Lade…</p></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" id="relayMembersWrap" style="display:none;">
+            <div class="card-header">
+              <h2>Mitglieder von <span id="relayMembersTeamId" style="color:var(--accent);font-family:ui-monospace,SFMono-Regular,Monaco,Consolas,monospace;font-size:12px;"></span></h2>
+              <button class="btn btn-sm btn-ghost" onclick="closeRelayMembers()">Schließen</button>
+            </div>
+            <div style="overflow-x:auto;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>User-ID</th>
+                    <th>Gerät</th>
+                    <th>Status</th>
+                    <th>Beigetreten</th>
+                    <th>Aktion</th>
+                  </tr>
+                </thead>
+                <tbody id="relayMembersBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tickets view ───────────────────────────────── -->
+    <div class="view" id="view-tickets">
+      <header class="content-header">
+        <h1>Team-Tickets</h1>
+        <div class="content-header-actions">
+          <button class="btn btn-sm btn-ghost" onclick="refreshRelay()">Aktualisieren</button>
+          <button class="btn btn-sm btn-accent" onclick="openNewTicketModal()">+ Neues Ticket</button>
+        </div>
+      </header>
+      <div class="view-body">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Einmal-Codes für Team-Gründung</h2>
+              <div class="card-header-sub">Erstelle einen Code und gib ihn an die Person, die ein neues Team gründen soll.</div>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Notiz</th>
+                  <th>Erstellt</th>
+                  <th>Gültigkeit</th>
+                  <th>Status</th>
+                  <th>Aktion</th>
+                </tr>
+              </thead>
+              <tbody id="relayTicketsBody">
+                <tr><td colspan="6" class="empty-state"><p>Verbinde dich zuerst mit dem Relay.</p></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
 </div>
 
 <!-- Relay Ticket Modal -->
@@ -594,8 +860,7 @@ function login() {
     if (ok) {
       sessionStorage.setItem('axion_admin', secret);
       document.getElementById('loginView').style.display = 'none';
-      document.getElementById('dashboardView').classList.add('visible');
-      document.getElementById('navRight').style.display = 'flex';
+      document.getElementById('appShell').classList.add('visible');
       fetchRequests();
     } else {
       adminSecret = '';
@@ -608,8 +873,21 @@ function logout() {
   adminSecret = '';
   sessionStorage.removeItem('axion_admin');
   document.getElementById('loginView').style.display = '';
-  document.getElementById('dashboardView').classList.remove('visible');
-  document.getElementById('navRight').style.display = 'none';
+  document.getElementById('appShell').classList.remove('visible');
+}
+
+function switchView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const target = document.getElementById('view-' + name);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.nav-item[data-view]').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-view') === name);
+  });
+  if (name === 'relay' || name === 'tickets') {
+    const url = document.getElementById('relayUrlInput').value.trim();
+    const token = document.getElementById('relayTokenInput').value.trim();
+    if (url && token && typeof refreshRelay === 'function') refreshRelay();
+  }
 }
 
 function showLoginError(msg) {
@@ -667,6 +945,57 @@ function updateStats() {
   document.getElementById('statActive').textContent = active;
   document.getElementById('statDevices').textContent = devices;
   document.getElementById('statExpiring').textContent = expiring;
+  renderOverview();
+}
+
+// ── Overview (dashboard view) ─────────────────────────────────────────────
+
+function renderOverview() {
+  // Recent licenses (latest 5 by created_at)
+  const tbody = document.getElementById('overviewLicensesBody');
+  if (tbody) {
+    if (!licenses || licenses.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-state"><p>Noch keine Lizenzen.</p></td></tr>';
+    } else {
+      const recent = [...licenses]
+        .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+        .slice(0, 5);
+      tbody.innerHTML = recent.map(l => {
+        const s = getStatus(l);
+        return `<tr>
+          <td class="td-name">${esc(l.customer_name || '—')}</td>
+          <td><span class="badge-plan ${l.plan || 'starter'}">${(l.plan || 'starter').charAt(0).toUpperCase() + (l.plan || 'starter').slice(1)}</span></td>
+          <td><span class="badge-status ${s}"><span class="dot"></span>${statusLabel(s)}</span></td>
+          <td>${formatDate(l.created_at)}</td>
+        </tr>`;
+      }).join('');
+    }
+  }
+
+  // Open requests preview
+  const empty = document.getElementById('overviewRequestsEmpty');
+  const list = document.getElementById('overviewRequestsList');
+  if (empty && list) {
+    const pending = (requests || []).filter(r => r.status === 'pending').slice(0, 3);
+    if (pending.length === 0) {
+      empty.style.display = '';
+      list.style.display = 'none';
+      list.innerHTML = '';
+    } else {
+      empty.style.display = 'none';
+      list.style.display = '';
+      list.innerHTML = pending.map(r => `
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);">
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;color:var(--fg);font-size:13px;">${esc(r.first_name)} ${esc(r.last_name)}</div>
+            <div style="font-size:12px;color:var(--fg-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(r.email)} · ${esc(r.message || '—')}</div>
+          </div>
+          <span class="badge-plan ${r.plan || 'starter'}">${(r.plan || 'starter').charAt(0).toUpperCase() + (r.plan || 'starter').slice(1)}</span>
+          <button class="btn btn-sm btn-ghost" onclick="switchView('requests')">Öffnen</button>
+        </div>
+      `).join('');
+    }
+  }
 }
 
 // ── Table ─────────────────────────────────────────────────────────────────
@@ -925,6 +1254,15 @@ function renderRequests() {
   badge.textContent = pending.length;
   badge.style.display = pending.length > 0 ? 'inline-flex' : 'none';
 
+  // Mirror pending count to sidebar badge
+  const navBadge = document.getElementById('navRequestsBadge');
+  if (navBadge) {
+    navBadge.textContent = pending.length;
+    navBadge.classList.toggle('visible', pending.length > 0);
+  }
+
+  renderOverview();
+
   if (requests.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><p>Keine Anfragen vorhanden.</p></td></tr>';
     return;
@@ -1083,6 +1421,15 @@ async function refreshRelay() {
 
   document.getElementById('relayDisconnected').style.display = 'none';
   document.getElementById('relayConnected').style.display = '';
+
+  // Sidebar status dot → online
+  const dot = document.getElementById('navRelayBadge');
+  if (dot) {
+    dot.textContent = '•';
+    dot.style.background = 'var(--accent)';
+    dot.style.color = 'var(--surface)';
+    dot.classList.add('visible');
+  }
 
   // Also load tickets list.
   refreshTickets().catch(() => {});
