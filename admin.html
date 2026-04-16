@@ -469,6 +469,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h14a2 2 0 012 2v3a2 2 0 000 4v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3a2 2 0 000-4V7z"/><path d="M13 5v2M13 11v2M13 17v2"/></svg>
         Team-Tickets
       </button>
+      <button class="nav-item" data-view="metrics" onclick="switchView('metrics')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-5"/></svg>
+        Metriken
+      </button>
     </nav>
 
     <div class="sidebar-footer">
@@ -734,6 +738,95 @@
       </div>
     </div>
 
+    <!-- ── Metrics view ───────────────────────────────── -->
+    <div class="view" id="view-metrics">
+      <header class="content-header">
+        <h1>Metriken</h1>
+        <div class="content-header-actions">
+          <span id="metricsAutoNote" style="font-size:11px;color:var(--fg-faint);">Auto-Refresh alle 30s</span>
+          <button class="btn btn-sm btn-ghost" onclick="refreshMetrics()">Aktualisieren</button>
+        </div>
+      </header>
+      <div class="view-body">
+        <div id="metricsDisconnected" class="card card-padded" style="text-align:center;">
+          <p style="color:var(--fg-muted);font-size:14px;">Verbinde dich zuerst mit dem Relay (Tab „Relay").</p>
+        </div>
+        <div id="metricsConnected" style="display:none;">
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-label">Live-Verbindungen</div>
+              <div class="stat-value" id="metricLiveWs">—</div>
+              <div class="stat-sub">aktive WebSockets</div>
+            </div>
+            <div class="stat-card alt">
+              <div class="stat-label">Gespeicherte Blobs</div>
+              <div class="stat-value" id="metricBlobsTotal">—</div>
+              <div class="stat-sub" id="metricBlobsBreakdown">—</div>
+            </div>
+            <div class="stat-card purple">
+              <div class="stat-label">Traffic letzte 24h</div>
+              <div class="stat-value" id="metricBlobs24h">—</div>
+              <div class="stat-sub" id="metricBlobs7d">—</div>
+            </div>
+            <div class="stat-card danger">
+              <div class="stat-label">Speicher frei</div>
+              <div class="stat-value" id="metricDiskFree">—</div>
+              <div class="stat-sub" id="metricDiskBreakdown">—</div>
+            </div>
+          </div>
+
+          <div class="card card-padded" style="margin-bottom:18px;">
+            <h2 style="font-size:13px;font-weight:700;margin-bottom:12px;">Retention-Policy</h2>
+            <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;font-size:12px;">
+              <div>
+                <div style="color:var(--fg-faint);margin-bottom:4px;">Hard-TTL</div>
+                <div style="color:var(--fg);font-weight:600;" id="metricTtlDays">—</div>
+              </div>
+              <div>
+                <div style="color:var(--fg-faint);margin-bottom:4px;">ACK-Sweep</div>
+                <div style="color:var(--fg);font-weight:600;" id="metricAckSweep">—</div>
+              </div>
+              <div>
+                <div style="color:var(--fg-faint);margin-bottom:4px;">Ältester Blob</div>
+                <div style="color:var(--fg);font-weight:600;" id="metricOldest">—</div>
+              </div>
+            </div>
+            <p style="font-size:11px;color:var(--fg-faint);margin-top:10px;line-height:1.5;">
+              Blobs werden gelöscht, sobald alle Empfänger den Apply bestätigt (ACK) haben.
+              Nach Ablauf der Hard-TTL wird unabhängig davon gelöscht — damit ein permanent offline-User
+              den Speicher nicht dauerhaft blockiert.
+            </p>
+          </div>
+
+          <div class="card" style="margin-bottom:18px;">
+            <div class="card-header">
+              <div>
+                <h2>Team-Aktivität</h2>
+                <div class="card-header-sub">Blobs, Speicher und letzte Aktivität pro Team</div>
+              </div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Team-ID</th>
+                    <th>Mitglieder</th>
+                    <th>Blobs</th>
+                    <th>Bytes</th>
+                    <th>Letzte 24h</th>
+                    <th>Letzte Aktivität</th>
+                  </tr>
+                </thead>
+                <tbody id="metricsActivityBody">
+                  <tr><td colspan="6" class="empty-state"><p>Lade…</p></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -876,6 +969,8 @@ function logout() {
   document.getElementById('appShell').classList.remove('visible');
 }
 
+let metricsTimer = null;
+
 function switchView(name) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   const target = document.getElementById('view-' + name);
@@ -887,6 +982,13 @@ function switchView(name) {
     const url = document.getElementById('relayUrlInput').value.trim();
     const token = document.getElementById('relayTokenInput').value.trim();
     if (url && token && typeof refreshRelay === 'function') refreshRelay();
+  }
+
+  // Metrics view has its own auto-refresh loop. Start/stop it based on view.
+  if (metricsTimer) { clearInterval(metricsTimer); metricsTimer = null; }
+  if (name === 'metrics') {
+    refreshMetrics();
+    metricsTimer = setInterval(() => refreshMetrics(), 30000);
   }
 }
 
@@ -1604,6 +1706,88 @@ async function revokeTicket(code) {
   } catch (err) {
     toast('Fehler: ' + err.message, 'error');
   }
+}
+
+// ── Metrics dashboard ──────────────────────────────────────────────────────
+
+async function refreshMetrics() {
+  if (!relayUrl || !relayToken) {
+    document.getElementById('metricsDisconnected').style.display = '';
+    document.getElementById('metricsConnected').style.display = 'none';
+    return;
+  }
+  try {
+    const [m, activity] = await Promise.all([
+      relayFetch('/admin/metrics'),
+      relayFetch('/admin/activity'),
+    ]);
+    document.getElementById('metricsDisconnected').style.display = 'none';
+    document.getElementById('metricsConnected').style.display = '';
+
+    // Stat cards
+    document.getElementById('metricLiveWs').textContent = m.live_ws_sessions ?? 0;
+    document.getElementById('metricBlobsTotal').textContent = m.blobs_total ?? 0;
+    document.getElementById('metricBlobsBreakdown').textContent =
+      `${m.blobs_fully_acked} acked · ${m.blobs_delivered_not_acked} wait · ${m.blobs_undelivered} pending`;
+    document.getElementById('metricBlobs24h').textContent = m.blobs_last_24h ?? 0;
+    document.getElementById('metricBlobs7d').textContent = `${m.blobs_last_7d ?? 0} in 7 Tagen`;
+
+    document.getElementById('metricDiskFree').textContent = formatBytes(m.disk_free_bytes);
+    document.getElementById('metricDiskBreakdown').textContent =
+      m.disk_total_bytes != null
+        ? `von ${formatBytes(m.disk_total_bytes)} gesamt`
+        : 'Disk-Info nicht verfügbar';
+
+    // Retention
+    const ret = m.retention || {};
+    document.getElementById('metricTtlDays').textContent = `${ret.hard_ttl_days ?? '—'} Tage`;
+    document.getElementById('metricAckSweep').textContent =
+      ret.ack_sweep_interval_s ? `alle ${Math.round(ret.ack_sweep_interval_s / 60)} min` : '—';
+    document.getElementById('metricOldest').textContent = m.oldest_blob_iso
+      ? formatRelativeAge(m.oldest_blob_iso)
+      : '—';
+
+    // Per-team activity
+    const tbody = document.getElementById('metricsActivityBody');
+    if (!activity || activity.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><p>Keine Teams aktiv.</p></td></tr>';
+    } else {
+      tbody.innerHTML = activity.map(row => `
+        <tr>
+          <td class="td-key" title="${esc(row.team_id)}">${esc(row.team_id.slice(0, 8))}…</td>
+          <td>${row.members}</td>
+          <td>${row.blobs}</td>
+          <td>${formatBytes(row.bytes)}</td>
+          <td>${row.blobs_last_24h}</td>
+          <td>${row.last_activity ? formatRelativeAge(row.last_activity) : '—'}</td>
+        </tr>
+      `).join('');
+    }
+  } catch (err) {
+    console.error('[metrics] refresh failed:', err);
+  }
+}
+
+function formatBytes(bytes) {
+  if (bytes == null) return '—';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let n = Number(bytes);
+  let i = 0;
+  while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+  return `${n.toFixed(n < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
+}
+
+function formatRelativeAge(iso) {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  if (diffMs < 0) return 'jetzt';
+  const s = Math.floor(diffMs / 1000);
+  if (s < 60) return `${s}s her`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}min her`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h her`;
+  const d = Math.floor(h / 24);
+  return `${d} Tage her`;
 }
 </script>
 
