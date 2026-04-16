@@ -444,6 +444,30 @@
         </table>
       </div>
     </div>
+
+    <!-- Tickets list -->
+    <div style="margin-top:24px;">
+      <div class="toolbar" style="margin-top:0;">
+        <h2 style="font-size:16px;">Team-Tickets</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Notiz</th>
+              <th>Erstellt</th>
+              <th>Gültigkeit</th>
+              <th>Status</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="relayTicketsBody">
+            <tr><td colspan="6" class="empty-state"><p>Lade…</p></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1060,6 +1084,9 @@ async function refreshRelay() {
   document.getElementById('relayDisconnected').style.display = 'none';
   document.getElementById('relayConnected').style.display = '';
 
+  // Also load tickets list.
+  refreshTickets().catch(() => {});
+
   document.getElementById('relayStatTeams').textContent = stats.teams;
   document.getElementById('relayStatMembers').textContent = stats.members_active;
   document.getElementById('relayStatRevoked').textContent = stats.members_revoked;
@@ -1183,6 +1210,52 @@ async function copyTicket() {
     toast('In Zwischenablage kopiert.', 'success');
   } catch {
     toast('Kopieren fehlgeschlagen — bitte manuell markieren.', 'error');
+  }
+}
+
+async function refreshTickets() {
+  const body = document.getElementById('relayTicketsBody');
+  try {
+    const tickets = await relayFetch('/admin/tickets');
+    if (!tickets.length) {
+      body.innerHTML = '<tr><td colspan="6" class="empty-state"><p>Noch keine Tickets erstellt.</p></td></tr>';
+      return;
+    }
+    body.innerHTML = tickets.map(t => {
+      const neverExpires = new Date(t.expires_at).getUTCFullYear() >= 9999;
+      const expired = !neverExpires && new Date(t.expires_at) < new Date();
+      let statusHtml;
+      if (t.used) {
+        statusHtml = `<span class="badge-status approved"><span class="dot"></span>Eingelöst</span>`;
+        if (t.used_by_team_id) statusHtml += `<br><span style="font-size:10px;color:var(--fg-faint);">Team: ${esc(t.used_by_team_id.slice(0,8))}…</span>`;
+      } else if (expired) {
+        statusHtml = `<span class="badge-status rejected"><span class="dot"></span>Abgelaufen</span>`;
+      } else {
+        statusHtml = `<span class="badge-status" style="color:var(--accent);"><span class="dot" style="background:var(--accent);"></span>Offen</span>`;
+      }
+      const canRevoke = !t.used && !expired;
+      return `<tr${t.used || expired ? ' style="opacity:0.5;"' : ''}>
+        <td style="font-family:ui-monospace,SFMono-Regular,Monaco,Consolas,monospace;font-size:11px;">${esc(t.code.slice(0,16))}…</td>
+        <td>${esc(t.note || '—')}</td>
+        <td>${formatDate(t.created_at)}</td>
+        <td>${neverExpires ? 'Dauerhaft' : formatDate(t.expires_at)}</td>
+        <td>${statusHtml}</td>
+        <td>${canRevoke ? `<button class="btn btn-sm btn-danger" onclick="revokeTicket('${esc(t.code)}')">Löschen</button>` : '—'}</td>
+      </tr>`;
+    }).join('');
+  } catch (err) {
+    body.innerHTML = `<tr><td colspan="6" class="empty-state"><p>Fehler: ${esc(err.message)}</p></td></tr>`;
+  }
+}
+
+async function revokeTicket(code) {
+  if (!confirm('Ticket löschen? Der Code kann danach nicht mehr verwendet werden.')) return;
+  try {
+    await relayFetch(`/admin/tickets/${encodeURIComponent(code)}`, { method: 'DELETE' });
+    toast('Ticket gelöscht.', 'success');
+    await refreshTickets();
+  } catch (err) {
+    toast('Fehler: ' + err.message, 'error');
   }
 }
 </script>
