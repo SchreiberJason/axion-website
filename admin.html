@@ -882,9 +882,9 @@
           </p>
 
           <div style="margin-bottom:18px;">
-            <div style="font-size:11px;color:var(--fg-faint);margin-bottom:6px;">8-stelliges Token</div>
+            <div style="font-size:11px;color:var(--fg-faint);margin-bottom:6px;">10-stelliges Token</div>
             <div style="display:flex;gap:8px;align-items:center;">
-              <code id="resetToken" style="flex:1;padding:14px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;font-size:24px;letter-spacing:4px;font-family:ui-monospace,SFMono-Regular,Monaco,Consolas,monospace;text-align:center;">––––––––</code>
+              <code id="resetToken" style="flex:1;padding:14px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;font-size:22px;letter-spacing:3px;font-family:ui-monospace,SFMono-Regular,Monaco,Consolas,monospace;text-align:center;">––––––––––</code>
               <button class="btn btn-sm btn-ghost" onclick="navigator.clipboard.writeText(document.getElementById('resetToken').textContent.trim())">Kopieren</button>
             </div>
           </div>
@@ -2009,10 +2009,26 @@ async function _aesGcmOpen(keyBytes, blob) {
   return new Uint8Array(pt);
 }
 
-function _randomToken8() {
-  const bytes = crypto.getRandomValues(new Uint8Array(4));
-  const n = ((bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3]) >>> 0;
-  return (n % 100000000).toString().padStart(8, '0');
+// Must match src-tauri/src/account/admin.rs::RESET_TOKEN_DIGITS. 10 digits
+// gives ≈33 bits — enough to make offline brute-force of a captured token
+// bundle impractical.
+const RESET_TOKEN_DIGITS = 10;
+
+function _randomResetToken() {
+  // Same rejection-sampling approach the Rust side uses: draw a 64-bit
+  // unsigned int, discard anything that would introduce modulo bias, then
+  // take n % 10^10.
+  const LIMIT = 10_000_000_000n;
+  const U64_MAX = (1n << 64n) - 1n;
+  const MAX_ACCEPTED = U64_MAX - (U64_MAX % LIMIT);
+  while (true) {
+    const bytes = crypto.getRandomValues(new Uint8Array(8));
+    let n = 0n;
+    for (let i = 0; i < 8; i++) n = (n << 8n) | BigInt(bytes[i]);
+    if (n < MAX_ACCEPTED) {
+      return (n % LIMIT).toString().padStart(RESET_TOKEN_DIGITS, '0');
+    }
+  }
 }
 
 async function resetLoadBundle() {
@@ -2136,7 +2152,7 @@ async function resetCompute() {
     if (masterKey.length !== 32) throw new Error('unwrapped length wrong');
 
     // Re-wrap with an 8-digit token using AES-256-GCM.
-    const token = _randomToken8();
+    const token = _randomResetToken();
     const tokenKey = await _tokenToKey(token, payload.account_uuid);
     const bundleBlob = await _aesGcmSeal(tokenKey, masterKey);
 
