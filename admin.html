@@ -473,6 +473,12 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-5"/></svg>
         Metriken
       </button>
+
+      <div class="nav-section-label" style="margin-top:14px;">Konten</div>
+      <button class="nav-item" data-view="reset" onclick="switchView('reset')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 12 11 12"/></svg>
+        Passwort-Reset
+      </button>
     </nav>
 
     <div class="sidebar-footer">
@@ -823,6 +829,79 @@
               </table>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Passwort-Reset view ───────────────────────────── -->
+    <div class="view" id="view-reset">
+      <header class="content-header">
+        <h1>Passwort-Reset</h1>
+        <div class="content-header-actions">
+          <span id="resetSodiumStatus" style="font-size:11px;color:var(--fg-faint);">libsodium lädt…</span>
+        </div>
+      </header>
+      <div class="view-body">
+        <div class="card card-padded" style="margin-bottom:18px;">
+          <h2 style="font-size:13px;font-weight:700;margin-bottom:6px;">1. Admin-Schlüssel laden</h2>
+          <p style="font-size:12px;color:var(--fg-muted);margin-bottom:12px;line-height:1.6;">
+            Wähle die <code>admin-bundle.axe</code>-Datei und entsperre sie mit deinem Admin-Backup-Passwort.
+            Der Private-Key verlässt deinen Browser nicht.
+          </p>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <input type="file" id="resetBundleFile" accept=".axe,application/json" style="font-size:12px;color:var(--fg-muted);" />
+            <input type="password" id="resetBundlePw" placeholder="Backup-Passwort" class="form-input" style="max-width:260px;" />
+            <button class="btn btn-sm btn-accent" onclick="resetLoadBundle()">Bundle öffnen</button>
+            <button class="btn btn-sm btn-ghost" onclick="resetGenerateBundle()" title="Neues Admin-Keypair erzeugen und Bundle herunterladen">Neues Bundle erzeugen</button>
+          </div>
+          <p id="resetBundleStatus" style="font-size:11px;color:var(--fg-faint);margin-top:10px;"></p>
+        </div>
+
+        <div class="card card-padded" style="margin-bottom:18px;">
+          <h2 style="font-size:13px;font-weight:700;margin-bottom:6px;">2. Reset-Anfrage des Agenten</h2>
+          <p style="font-size:12px;color:var(--fg-muted);margin-bottom:8px;">
+            JSON einfügen, das der Agent dir geschickt hat.
+          </p>
+          <textarea id="resetRequest" rows="6" class="form-input" style="font-family:ui-monospace,SFMono-Regular,Monaco,Consolas,monospace;font-size:11px;" placeholder='{"version":1,"account_uuid":…,"email":…,"escrow_b64":…,"requested_at":…}'></textarea>
+          <div style="display:flex;gap:10px;align-items:center;margin-top:10px;">
+            <label style="font-size:12px;color:var(--fg-muted);">Gültigkeit:</label>
+            <select id="resetTtl" class="form-input" style="max-width:160px;">
+              <option value="15">15 Minuten (empfohlen)</option>
+              <option value="5">5 Minuten</option>
+              <option value="60">1 Stunde</option>
+            </select>
+            <button class="btn btn-sm btn-accent" onclick="resetCompute()">Reset vorbereiten</button>
+          </div>
+          <p id="resetError" class="error-msg" style="margin-top:8px;"></p>
+        </div>
+
+        <div class="card card-padded" id="resetResult" style="display:none;">
+          <h2 style="font-size:13px;font-weight:700;margin-bottom:6px;">3. Token + Antwort-Bundle</h2>
+          <p style="font-size:12px;color:var(--fg-muted);margin-bottom:14px;">
+            Gib dem Agenten <strong>beides</strong> auf getrennten Kanälen (z.B. Token per Telefon, Bundle per E-Mail).
+          </p>
+
+          <div style="margin-bottom:18px;">
+            <div style="font-size:11px;color:var(--fg-faint);margin-bottom:6px;">8-stelliges Token</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <code id="resetToken" style="flex:1;padding:14px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;font-size:24px;letter-spacing:4px;font-family:ui-monospace,SFMono-Regular,Monaco,Consolas,monospace;text-align:center;">––––––––</code>
+              <button class="btn btn-sm btn-ghost" onclick="navigator.clipboard.writeText(document.getElementById('resetToken').textContent.trim())">Kopieren</button>
+            </div>
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <div style="font-size:11px;color:var(--fg-faint);margin-bottom:6px;">Antwort-Bundle (JSON)</div>
+            <textarea id="resetBundle" rows="6" class="form-input" readonly style="font-family:ui-monospace,SFMono-Regular,Monaco,Consolas,monospace;font-size:11px;"></textarea>
+            <div style="display:flex;gap:10px;margin-top:8px;">
+              <button class="btn btn-sm btn-ghost" onclick="navigator.clipboard.writeText(document.getElementById('resetBundle').value)">Bundle kopieren</button>
+              <span id="resetExpires" style="font-size:11px;color:var(--fg-faint);align-self:center;"></span>
+            </div>
+          </div>
+
+          <p style="font-size:11px;color:var(--fg-faint);line-height:1.6;margin-top:12px;">
+            Hinweis: Token und Bundle nie gemeinsam über denselben Kanal übertragen. Ein Abhörer, der beides hat,
+            könnte das Passwort setzen. Token = Faktor, Bundle = Payload.
+          </p>
         </div>
       </div>
     </div>
@@ -1788,6 +1867,280 @@ function formatRelativeAge(iso) {
   if (h < 24) return `${h}h her`;
   const d = Math.floor(h / 24);
   return `${d} Tage her`;
+}
+
+// ── Passwort-Reset (Admin-Escrow) ──────────────────────────────────────────
+// Uses libsodium in the browser to unwrap the escrow blob the user sends us,
+// then re-wrap the master key under an 8-digit one-time token.
+//
+// Nothing about this flow talks to the relay — the agent and the admin
+// exchange the blobs out-of-band. The relay only sees what the agent
+// uploaded + what the admin downloaded; both are already encrypted.
+
+let sodiumReady = null;          // Promise resolved once libsodium is ready
+let adminX25519Secret = null;    // Uint8Array(32) — admin X25519 secret key
+let adminX25519Public = null;    // Uint8Array(32) — admin X25519 public key
+
+// Two candidate sources per script — prefer local (assets/) so the page
+// works over file:// without needing a CDN, fall back to jsDelivr if the
+// bundled file is missing (e.g. during local development of a fresh clone).
+//
+// The wrapper depends on the core being on the page first — that's why we
+// load them sequentially instead of in parallel.
+async function _loadScriptFromCandidates(candidates) {
+  for (const url of candidates) {
+    const ok = await new Promise((res) => {
+      const s = document.createElement('script');
+      s.src = url;
+      s.onload = () => res(true);
+      s.onerror = () => { s.remove(); res(false); };
+      document.head.appendChild(s);
+    });
+    if (ok) return url;
+  }
+  throw new Error('Keine Quelle erreichbar: ' + candidates.join(', '));
+}
+
+(async function bootstrapSodium() {
+  const statusEl = () => document.getElementById('resetSodiumStatus');
+  try {
+    const coreUrl = await _loadScriptFromCandidates([
+      'assets/libsodium-core.js',
+      'https://cdn.jsdelivr.net/npm/libsodium@0.7.15/dist/modules/libsodium.js',
+    ]);
+    const wrapperUrl = await _loadScriptFromCandidates([
+      'assets/sodium-wrappers.js',
+      'https://cdn.jsdelivr.net/npm/libsodium-wrappers@0.7.15/dist/modules/libsodium-wrappers.js',
+    ]);
+    if (!window.sodium || !window.sodium.ready) {
+      throw new Error('window.sodium fehlt nach dem Laden');
+    }
+    sodiumReady = window.sodium.ready.then(() => {
+      const el = statusEl();
+      if (el) el.textContent = 'libsodium bereit';
+    });
+    // Log sources so you can tell from the console which path was used.
+    console.info('[admin] sodium core:', coreUrl, '| wrapper:', wrapperUrl);
+  } catch (e) {
+    console.error('[admin] libsodium bootstrap failed:', e);
+    const el = statusEl();
+    if (el) {
+      el.textContent = 'libsodium konnte nicht geladen werden — siehe Konsole';
+      el.style.color = 'var(--danger)';
+    }
+  }
+})();
+
+function _b64decode(s) {
+  const bin = atob(s);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function _b64encode(u8) {
+  let s = '';
+  for (let i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]);
+  return btoa(s);
+}
+function _hexToBytes(h) {
+  const out = new Uint8Array(h.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(h.substr(i * 2, 2), 16);
+  return out;
+}
+function _bytesToHex(u8) {
+  return Array.from(u8, b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Derive a 32-byte AES key from an 8-digit token using the same HKDF+label
+// scheme the Rust side uses (see account::admin::token_to_key). Must match
+// byte-for-byte or the agent can't open our bundle.
+async function _tokenToKey(token, accountUuid) {
+  await sodiumReady;
+  const enc = new TextEncoder();
+  const salt = enc.encode('axion-reset-salt-v1');
+  const material = new Uint8Array([
+    ...enc.encode('axion-reset-token-v1:'),
+    ...enc.encode(accountUuid),
+    0x3a, // ':'
+    ...enc.encode(token),
+  ]);
+  const info = enc.encode('wrap');
+  const key = await crypto.subtle.importKey('raw', material, 'HKDF', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'HKDF', hash: 'SHA-256', salt, info },
+    key,
+    256,
+  );
+  return new Uint8Array(bits);
+}
+
+// AES-256-GCM seal with a random 12-byte nonce prepended — the same
+// [nonce || ct || tag] wire format as the Rust `account::crypto::seal`.
+async function _aesGcmSeal(keyBytes, plaintext) {
+  const nonce = crypto.getRandomValues(new Uint8Array(12));
+  const key = await crypto.subtle.importKey('raw', keyBytes, 'AES-GCM', false, ['encrypt']);
+  const ctBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: nonce }, key, plaintext);
+  const ct = new Uint8Array(ctBuf);
+  const out = new Uint8Array(12 + ct.length);
+  out.set(nonce, 0);
+  out.set(ct, 12);
+  return out;
+}
+
+async function _aesGcmOpen(keyBytes, blob) {
+  if (blob.length < 12 + 16) throw new Error('ciphertext too short');
+  const nonce = blob.slice(0, 12);
+  const ct = blob.slice(12);
+  const key = await crypto.subtle.importKey('raw', keyBytes, 'AES-GCM', false, ['decrypt']);
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: nonce }, key, ct);
+  return new Uint8Array(pt);
+}
+
+function _randomToken8() {
+  const bytes = crypto.getRandomValues(new Uint8Array(4));
+  const n = ((bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3]) >>> 0;
+  return (n % 100000000).toString().padStart(8, '0');
+}
+
+async function resetLoadBundle() {
+  try {
+    await sodiumReady;
+  } catch {
+    alert('libsodium ist nicht bereit — bitte neu laden.');
+    return;
+  }
+  const fileInput = document.getElementById('resetBundleFile');
+  const pw = document.getElementById('resetBundlePw').value;
+  const statusEl = document.getElementById('resetBundleStatus');
+  if (!fileInput.files.length) { statusEl.textContent = 'Bitte Datei auswählen.'; return; }
+  if (!pw) { statusEl.textContent = 'Bitte Passwort eingeben.'; return; }
+  statusEl.textContent = 'Entpacke Bundle…';
+  try {
+    const buf = await fileInput.files[0].arrayBuffer();
+    const blob = new Uint8Array(buf);
+
+    // Bundle format (browser + Rust share this):
+    //   "AXADMN\x01" (7) || salt(16) || AES-GCM(passKey, JSON-serialized keys)
+    // passKey = libsodium.crypto_pwhash(pw, salt, INTERACTIVE, INTERACTIVE, ARGON2ID)
+    const magic = new Uint8Array([65, 88, 65, 68, 77, 78, 0x01]);
+    for (let i = 0; i < magic.length; i++) {
+      if (blob[i] !== magic[i]) throw new Error('Kein gültiges admin-bundle');
+    }
+    const salt = blob.slice(7, 7 + sodium.crypto_pwhash_SALTBYTES);
+    const ct = blob.slice(7 + sodium.crypto_pwhash_SALTBYTES);
+    const passKey = sodium.crypto_pwhash(
+      32, pw, salt,
+      sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE,
+      sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE,
+      sodium.crypto_pwhash_ALG_ARGON2ID13,
+    );
+    const pt = await _aesGcmOpen(passKey, ct);
+    const json = JSON.parse(new TextDecoder().decode(pt));
+    adminX25519Secret = _hexToBytes(json.x25519_secret_hex);
+    adminX25519Public = _hexToBytes(json.x25519_public_hex);
+    statusEl.textContent = `Bundle geladen — Admin-Pubkey: ${json.x25519_public_hex.substr(0, 16)}…`;
+    statusEl.style.color = 'var(--accent)';
+  } catch (e) {
+    statusEl.textContent = 'Bundle konnte nicht geöffnet werden: ' + (e.message || e);
+    statusEl.style.color = 'var(--danger)';
+  }
+}
+
+async function resetGenerateBundle() {
+  await sodiumReady;
+  const pw = prompt('Passwort für neues Admin-Bundle (mindestens 12 Zeichen):');
+  if (!pw || pw.length < 12) { alert('Abgebrochen oder Passwort zu kurz.'); return; }
+  const pw2 = prompt('Passwort nochmal zur Bestätigung:');
+  if (pw2 !== pw) { alert('Passwörter stimmen nicht überein.'); return; }
+
+  const x = sodium.crypto_box_keypair();
+  const signKeys = sodium.crypto_sign_keypair();
+  const payload = {
+    version: 1,
+    x25519_secret_hex: _bytesToHex(x.privateKey),
+    x25519_public_hex: _bytesToHex(x.publicKey),
+    ed25519_signing_secret_hex: _bytesToHex(signKeys.privateKey),
+    ed25519_verifying_hex: _bytesToHex(signKeys.publicKey),
+    created_at: new Date().toISOString(),
+    note: 'Axion admin escrow bundle — keep offline',
+  };
+  const salt = sodium.randombytes_buf(sodium.crypto_pwhash_SALTBYTES);
+  const passKey = sodium.crypto_pwhash(
+    32, pw, salt,
+    sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE,
+    sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE,
+    sodium.crypto_pwhash_ALG_ARGON2ID13,
+  );
+  const ct = await _aesGcmSeal(passKey, new TextEncoder().encode(JSON.stringify(payload)));
+  const magic = new Uint8Array([65, 88, 65, 68, 77, 78, 0x01]);
+  const out = new Uint8Array(magic.length + salt.length + ct.length);
+  out.set(magic, 0);
+  out.set(salt, magic.length);
+  out.set(ct, magic.length + salt.length);
+
+  // Offer as download + show the pubkey to bake into AXION_ADMIN_PUBKEY_HEX.
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(new Blob([out], { type: 'application/octet-stream' }));
+  link.download = 'admin-bundle.axe';
+  link.click();
+  URL.revokeObjectURL(link.href);
+
+  alert(
+    'Bundle gespeichert.\n\n' +
+    'In deinen Release-Build baken:\n' +
+    'AXION_ADMIN_PUBKEY_HEX=' + payload.x25519_public_hex +
+    '\n\nBackup JETZT an einen sicheren Offline-Ort kopieren (Yubikey / USB / verschlüsseltes iCloud).'
+  );
+}
+
+async function resetCompute() {
+  const errEl = document.getElementById('resetError');
+  errEl.textContent = '';
+  if (!adminX25519Secret) { errEl.textContent = 'Erst Admin-Bundle laden.'; return; }
+  let payload;
+  try {
+    payload = JSON.parse(document.getElementById('resetRequest').value);
+  } catch (e) {
+    errEl.textContent = 'Anfrage konnte nicht gelesen werden — JSON ungültig.';
+    return;
+  }
+  if (!payload.escrow_b64 || !payload.account_uuid) {
+    errEl.textContent = 'Anfrage unvollständig (escrow_b64 / account_uuid fehlt).';
+    return;
+  }
+  try {
+    await sodiumReady;
+    // Unwrap the escrow blob (libsodium crypto_box_seal_open compatible wire format).
+    const escrow = _b64decode(payload.escrow_b64);
+    const masterKey = sodium.crypto_box_seal_open(escrow, adminX25519Public, adminX25519Secret);
+    if (masterKey.length !== 32) throw new Error('unwrapped length wrong');
+
+    // Re-wrap with an 8-digit token using AES-256-GCM.
+    const token = _randomToken8();
+    const tokenKey = await _tokenToKey(token, payload.account_uuid);
+    const bundleBlob = await _aesGcmSeal(tokenKey, masterKey);
+
+    const ttlMin = parseInt(document.getElementById('resetTtl').value, 10) || 15;
+    const now = new Date();
+    const expires = new Date(now.getTime() + ttlMin * 60 * 1000);
+    const bundle = {
+      version: 1,
+      account_uuid: payload.account_uuid,
+      blob_b64: _b64encode(bundleBlob),
+      issued_at: now.toISOString(),
+      expires_at: expires.toISOString(),
+    };
+
+    document.getElementById('resetToken').textContent = token;
+    document.getElementById('resetBundle').value = JSON.stringify(bundle);
+    document.getElementById('resetExpires').textContent = `Gültig bis ${expires.toLocaleTimeString('de-DE')} (${ttlMin} min)`;
+    document.getElementById('resetResult').style.display = '';
+
+    // Proactively zero the master key reference we still hold.
+    masterKey.fill(0);
+  } catch (e) {
+    errEl.textContent = 'Reset-Berechnung fehlgeschlagen: ' + (e.message || e);
+  }
 }
 </script>
 
