@@ -2051,7 +2051,14 @@ async function resetLoadBundle() {
     const json = JSON.parse(new TextDecoder().decode(pt));
     adminX25519Secret = _hexToBytes(json.x25519_secret_hex);
     adminX25519Public = _hexToBytes(json.x25519_public_hex);
-    statusEl.textContent = `Bundle geladen — Admin-Pubkey: ${json.x25519_public_hex.substr(0, 16)}…`;
+    // Show the full pubkey + a copy button so the admin can retrieve the
+    // AXION_ADMIN_PUBKEY_HEX value to bake into the release build, even
+    // if they dismissed the initial "Bundle erzeugt"-dialog too quickly.
+    const copyBtn = `<button style="margin-left:8px;padding:2px 8px;font-size:11px;border:1px solid var(--border);background:var(--surface-2);color:var(--fg);border-radius:6px;cursor:pointer;" onclick="navigator.clipboard.writeText('${json.x25519_public_hex}').then(()=>this.textContent='kopiert ✓')">kopieren</button>`;
+    statusEl.innerHTML =
+      `Bundle geladen<br>` +
+      `<code style="font-size:10px;color:var(--fg-muted);word-break:break-all;">AXION_ADMIN_PUBKEY_HEX=${json.x25519_public_hex}</code>` +
+      copyBtn;
     statusEl.style.color = 'var(--accent)';
   } catch (e) {
     statusEl.textContent = 'Bundle konnte nicht geöffnet werden: ' + (e.message || e);
