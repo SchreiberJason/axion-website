@@ -1904,18 +1904,31 @@ async function _loadScriptFromCandidates(candidates) {
 (async function bootstrapSodium() {
   const statusEl = () => document.getElementById('resetSodiumStatus');
   try {
+    // The sumo variants are required — crypto_pwhash and its INTERACTIVE
+    // constants only exist in the -sumo build. Non-sumo exposes the
+    // function name but without the *_SALTBYTES / *_MEMLIMIT constants,
+    // which silently passes undefined into randombytes_buf and dies with
+    // "length cannot be null or undefined".
     const coreUrl = await _loadScriptFromCandidates([
       'assets/libsodium-core.js',
-      'https://cdn.jsdelivr.net/npm/libsodium@0.7.15/dist/modules/libsodium.js',
+      'https://cdn.jsdelivr.net/npm/libsodium-sumo@0.7.15/dist/modules-sumo/libsodium-sumo.js',
     ]);
     const wrapperUrl = await _loadScriptFromCandidates([
       'assets/sodium-wrappers.js',
-      'https://cdn.jsdelivr.net/npm/libsodium-wrappers@0.7.15/dist/modules/libsodium-wrappers.js',
+      'https://cdn.jsdelivr.net/npm/libsodium-wrappers-sumo@0.7.15/dist/modules-sumo/libsodium-wrappers.js',
     ]);
     if (!window.sodium || !window.sodium.ready) {
       throw new Error('window.sodium fehlt nach dem Laden');
     }
     sodiumReady = window.sodium.ready.then(() => {
+      // Sanity check: the -sumo constants must be present. If not, the
+      // wrong build slipped through (non-sumo exposes the function name
+      // but not the constants) and crypto_pwhash would fail at runtime
+      // with an unhelpful "length cannot be null" message.
+      const s = window.sodium;
+      if (!s.crypto_pwhash_SALTBYTES || !s.crypto_pwhash_OPSLIMIT_INTERACTIVE) {
+        throw new Error('libsodium ohne SUMO-Build geladen — Passwort-Hashing nicht verfügbar');
+      }
       const el = statusEl();
       if (el) el.textContent = 'libsodium bereit';
     });
